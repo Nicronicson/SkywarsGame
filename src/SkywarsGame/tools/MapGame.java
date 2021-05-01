@@ -31,6 +31,9 @@ public class MapGame extends Map {
         super(mapname);
         spawnpoint = 0;
         load();
+    }
+
+    public void start(){
         fillChests();
         teleportAllPlayers();
     }
