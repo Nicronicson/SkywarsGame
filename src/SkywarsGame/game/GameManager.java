@@ -9,6 +9,10 @@ import SkywarsGame.tools.Team;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.*;
 
@@ -114,20 +118,50 @@ public class GameManager {
             if(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(Integer.toString(teamEntry.getValue().getId())) == null)
                 Bukkit.getScoreboardManager().getMainScoreboard().registerNewTeam(Integer.toString(teamEntry.getValue().getId()));{
                 Bukkit.getScoreboardManager().getMainScoreboard().getTeam(Integer.toString(teamEntry.getValue().getId())).setAllowFriendlyFire(false);
-                Bukkit.getScoreboardManager().getMainScoreboard().getTeam(Integer.toString(teamEntry.getValue().getId())).setPrefix("[" + teamEntry.getValue().getId() + "]");
             }
             Bukkit.getScoreboardManager().getMainScoreboard().getTeam(Integer.toString(teamEntry.getValue().getId())).addEntry(teamEntry.getKey().getName());
         }
 
-        //Clear all Inventories
-        for(Player player : Bukkit.getOnlinePlayers()){
-            player.getInventory().clear();
+        //Set InitialScoreboards && Clear all Inventories
+        for(Map.Entry<Player, Team> entrySet : playerTeamMap.entrySet()){
+            setInitialScoreboard(entrySet.getKey());
+            entrySet.getKey().getInventory().clear();
         }
 
         distributePlayersOnTeams();
         giveEveryPlayerAKit();
         mapGame.start(playerTeamMap);
         gameState = GameState.WARM_UP;
+        initiateStartCountdown();
+    }
+
+    private void initiateStartCountdown(){
+        startCountdown(1);
+    }
+
+    private void startCountdown(int iteration){
+        if(iteration == WARM_UP_TIME){
+            startAction();
+            return;
+        }
+
+        int leftOverSeconds = LOBBY_WAIT_TIME - iteration;
+        if(leftOverSeconds == 10 || leftOverSeconds == 5 || leftOverSeconds == 4 || leftOverSeconds == 3 || leftOverSeconds == 2 || leftOverSeconds == 1){
+            Bukkit.broadcastMessage(String.format(Language.TITLE_START_FIGHT.getFormattedText(), leftOverSeconds));
+        }
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                startCountdown(iteration + 1);
+            }
+        }.runTaskLater(Main.getJavaPlugin(), 1L);
+    }
+
+    private void broadcastStartCountdown(int time){
+        for(Player player : Bukkit.getOnlinePlayers()){
+            player.sendMessage(String.format(Language.TITLE_START_FIGHT.getFormattedText(), time));
+        }
     }
 
     //Starts Action Phase
@@ -262,4 +296,48 @@ public class GameManager {
     public GameState getGameState() {
         return gameState;
     }
+
+    //Scoreboard
+    public void setInitialScoreboard(Player player) {
+
+        Scoreboard board = Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard();
+        Objective obj = board.registerNewObjective("Infos", "dummy", ChatColor.AQUA + "Skywars");
+        obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+        obj.getScore("").setScore(6);
+
+        Score roleName = obj.getScore(ChatColor.WHITE + "Spieler:");
+        roleName.setScore(5);
+        org.bukkit.scoreboard.Team roleCounter = board.registerNewTeam("playerCounter");
+        roleCounter.addEntry(ChatColor.RED + "" + ChatColor.WHITE);
+        roleCounter.setPrefix(Integer.toString(playerTeamMap.size()));
+        obj.getScore(ChatColor.RED + "" + ChatColor.WHITE).setScore(4);
+
+        obj.getScore(" ").setScore(3);
+
+        Score kills = obj.getScore(ChatColor.WHITE + "Kills:");
+        kills.setScore(2);
+        org.bukkit.scoreboard.Team killCounter = board.registerNewTeam("killCounter");
+        killCounter.addEntry(ChatColor.GREEN + "" + ChatColor.WHITE);
+        killCounter.setPrefix(ChatColor.RED + "0");
+        obj.getScore(ChatColor.GREEN + "" + ChatColor.WHITE).setScore(1);
+
+        player.setScoreboard(board);
+    }
+
+    public void setPlayerCount() {
+        for(Map.Entry<Player, Team> entrySet : playerTeamMap.entrySet()){
+            Player player = entrySet.getKey();
+            Scoreboard board = player.getScoreboard();
+            Objects.requireNonNull(board.getTeam("playerCounter")).setPrefix(ChatColor.RED + "" + playerTeamMap.size());
+        }
+    }
+
+    public void increaseKillCounter(Player player) {
+        for(Player pointedAtPlayer : playerTeamMap.get(player).getPlayers()){
+            Scoreboard board = pointedAtPlayer.getScoreboard();
+            Objects.requireNonNull(board.getTeam("killCounter")).setPrefix(ChatColor.RED + "" + playerTeamMap.get(pointedAtPlayer).getKills());
+        }
+    }
+
 }

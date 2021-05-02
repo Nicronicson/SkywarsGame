@@ -87,6 +87,7 @@ public class GameListener implements Listener {
     private void removePlayer(Player player){
         spectatorManager.removeSpectator(player);
         gameManager.removePlayer(player);
+        gameManager.setPlayerCount();
     }
 
     @EventHandler

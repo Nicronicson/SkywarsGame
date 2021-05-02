@@ -15,7 +15,6 @@ public class Main extends JavaPlugin {
 
     private static JavaPlugin javaPlugin;
 
-    private final ScoreboardManager scoreboardManager = new ScoreboardManager();
     private final GameManager gameManager = new GameManager();
     private final SpectatorManager spectatorManager = new SpectatorManager(gameManager);
 
@@ -38,7 +37,7 @@ public class Main extends JavaPlugin {
     }
 
     private void registerListeners(){
-        getServer().getPluginManager().registerEvents(new ScoreboardListener(scoreboardManager), this);
+        getServer().getPluginManager().registerEvents(new ScoreboardListener(gameManager), this);
         getServer().getPluginManager().registerEvents(new SpectatorListener(spectatorManager, gameManager), this);
         getServer().getPluginManager().registerEvents(new GameListener(spectatorManager, gameManager), this);
     }

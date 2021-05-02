@@ -8,6 +8,7 @@ public enum Language {
     ERR_TRY_TO_REJOIN("Joining failed. Please try again!"),
     ERR_NOT_ENOUGH_PLAYERS("Es sind zu wenig Spieler auf dem Server!"),
     TITLE_START(ChatColor.AQUA + "Skywars" + ChatColor.GRAY + " startet in: %d"),
+    TITLE_START_FIGHT("WarmUp Phase endet in: %d"),
     ANNOUNCE_WIN_TEAM("Team %d hat gewonnen."),
     ANNOUNCE_WIN_PLAYERS("%s");
 

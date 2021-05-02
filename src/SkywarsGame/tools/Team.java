@@ -7,9 +7,19 @@ import java.util.Set;
 public class Team {
     private int id;
     Set<Player> players;
+    int kills;
 
     public Team(int id) {
         this.id = id;
+        kills = 0;
+    }
+
+    public void addKill(){
+        kills++;
+    }
+
+    public int getKills(){
+        return kills;
     }
 
     public int getId() {
