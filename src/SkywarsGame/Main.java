@@ -5,7 +5,6 @@ import SkywarsGame.commands.commands.SkywarsCCT;
 import SkywarsGame.game.GameListener;
 import SkywarsGame.game.GameManager;
 import SkywarsGame.scoreboard.ScoreboardListener;
-import SkywarsGame.scoreboard.ScoreboardManager;
 import SkywarsGame.spectator.SpectatorListener;
 import SkywarsGame.spectator.SpectatorManager;
 import org.bukkit.plugin.java.JavaPlugin;
