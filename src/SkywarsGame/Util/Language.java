@@ -4,9 +4,12 @@ import org.bukkit.ChatColor;
 
 public enum Language {
 
-    ERR_MAP_NOT_FOUND(""),
+    ERR_MAP_NOT_FOUND("Es existiert keine kompatible Map mit diesem Namen."),
+    ERR_TRY_TO_REJOIN("Joining failed. Please try again!"),
+    ERR_NOT_ENOUGH_PLAYERS("Es sind zu wenig Spieler auf dem Server!"),
     TITLE_START(ChatColor.AQUA + "Skywars" + ChatColor.GRAY + " startet in: %d"),
-    NOT_ENOUGH_PLAYERS("Es sind zu wenig Spieler auf dem Server!");
+    ANNOUNCE_WIN_TEAM("Team %d hat gewonnen."),
+    ANNOUNCE_WIN_PLAYERS("%s");
 
     private static final String SYSTEM_PREFIX = ChatColor.AQUA + "Skywars " + ChatColor.DARK_GRAY + "» ";
 
@@ -18,6 +21,10 @@ public enum Language {
 
     public String getText() {
         return text;
+    }
+
+    public String getTitleText(){
+        return ChatColor.AQUA + text;
     }
 
     public String getFormattedText() {

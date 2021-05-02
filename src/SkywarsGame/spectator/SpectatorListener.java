@@ -2,13 +2,11 @@ package SkywarsGame.spectator;
 
 import SkywarsGame.Main;
 import SkywarsGame.game.GameManager;
-import SkywarsGame.game.GameState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -24,21 +22,11 @@ public class SpectatorListener implements Listener {
     }
 
     @EventHandler
-    public void onSpectatorJoin(PlayerJoinEvent e){
-        if(gameManager.getGameState() != GameState.LOBBY){
-            spectatorManager.setPlayerAsSpectator(e.getPlayer());
-        }
-    }
-
-    @EventHandler
     public void onSpectatorRespawn(PlayerRespawnEvent e) {
-        Player player = e.getPlayer();
-        e.setRespawnLocation(e.getRespawnLocation().add(0,10,0));
-
         new BukkitRunnable() {
             @Override
             public void run() {
-                spectatorManager.setPlayerAsSpectator(player);
+                spectatorManager.joinOrRespawnAsSpectator(e.getPlayer());
             }
         }.runTaskLater(Main.getJavaPlugin(), 1);
     }

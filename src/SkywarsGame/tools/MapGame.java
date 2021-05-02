@@ -1,6 +1,5 @@
 package SkywarsGame.tools;
 
-import SkywarsCore.ChestEntry;
 import SkywarsCore.Map;
 import SkywarsGame.Util.MapUtilities;
 import org.bukkit.Bukkit;
@@ -11,31 +10,25 @@ import org.bukkit.block.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Player;
-import org.bukkit.material.MaterialData;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
+import java.util.Set;
 
 public class MapGame extends Map {
 
-    int spawnpoint;
-
     public MapGame(String mapname) {
         super(mapname);
-        spawnpoint = 0;
         load();
     }
 
-    public void start(){
+    public void start(java.util.Map<Player, Team> playerTeamMap){
         fillChests();
-        teleportAllPlayers();
+        teleportAllTeams(playerTeamMap);
     }
 
     public void load(){
@@ -73,8 +66,6 @@ public class MapGame extends Map {
         }
     }
 
-
-
     public void fillChests(){
         World map = Bukkit.getWorld(getMapname());
         ChestGame chests = new ChestGame();
@@ -103,16 +94,17 @@ public class MapGame extends Map {
         }
     }
 
-    private void teleportAllPlayers(){
+    private void teleportAllTeams(java.util.Map<Player, Team> playerTeamMap){
         for(Player player : Bukkit.getOnlinePlayers()){
-            teleportPlayer(player);
+            try {
+                teleportPlayer(player, playerTeamMap.get(player).getId());
+            } catch (Exception e){}
         }
     }
 
-    private void teleportPlayer(Player player){
+    private void teleportPlayer(Player player, int spawnpoint){
         Location location = getSpawnpoints().get(spawnpoint);
         location.setWorld(Bukkit.getWorld(getMapname()));
         player.teleport(location);
-        spawnpoint++;
     }
 }

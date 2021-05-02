@@ -1,6 +1,5 @@
 package SkywarsGame.scoreboard;
 
-import SkywarsGame.game.Role;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -15,10 +14,10 @@ public class ScoreboardManager {
 
     private final Map<Player, Integer> playerKills = new HashMap<>();
 
-    public void setScoreboard(Player player, Role role) {
+    public void setScoreboard(Player player) {
 
         Scoreboard board = Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard();
-        Objective obj = board.registerNewObjective("Infos", "dummy", ChatColor.RED + "TROUBLES");
+        Objective obj = board.registerNewObjective("Infos", "dummy", ChatColor.AQUA + "Skywars");
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         obj.getScore("").setScore(6);

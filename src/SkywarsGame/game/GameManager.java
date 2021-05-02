@@ -1,14 +1,12 @@
 package SkywarsGame.game;
 
 import SkywarsGame.Main;
-import SkywarsGame.Util.Countdown;
 import SkywarsGame.Util.Language;
+import SkywarsGame.tools.KitGame;
 import SkywarsGame.tools.Lobby;
 import SkywarsGame.tools.MapGame;
 import SkywarsGame.tools.Team;
-import org.bukkit.Bukkit;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -18,24 +16,35 @@ public class GameManager {
 
     private final int LOBBY_WAIT_TIME = 30;
     private final int WARM_UP_TIME = 30;
-    private final int MIN_PLAYERS_TO_START = 4;
-    private final int MIN_PLAYERS = 2;
+    private final int MIN_PLAYERS = 4;
+    private final int ABSOLUTE_MIN_PLAYERS = 2;
+
+    private final String LOBBY_NAME = "Lobby";
 
     private MapGame mapGame;
     private Lobby lobby;
     private String mapName;
 
-    boolean warmupCountdown;
+    boolean warmupCountdownActive;
 
     private final Map<Player, Team> playerTeamMap;
+    private final Map<Player, KitGame> playerKitMap;
     private GameState gameState;
+    private final Team[] teams;
 
     public GameManager() {
-        warmupCountdown = false;
+        warmupCountdownActive = false;
         playerTeamMap = new HashMap<>();
+        playerKitMap = new HashMap<>();
         gameState = GameState.PREPARING;
         lobby = new Lobby();
         mapGame = new MapGame(lobby.getStandartMap());
+
+        teams = new Team[mapGame.getSpawnpoints().size()];
+        for(int i = 0; i < mapGame.getSpawnpoints().size() ;i++){
+            teams[i] = new Team(i);
+        }
+
         gameState = GameState.LOBBY;
     }
 
@@ -47,35 +56,124 @@ public class GameManager {
         }
     }
 
+    public void joinLobby(Player player){
+        //Teleport to LobbySpawn
+        Location lobbySpawn = Bukkit.getWorld(LOBBY_NAME).getSpawnLocation();
+        lobbySpawn.setWorld(Bukkit.getWorld(LOBBY_NAME));
+
+        player.teleport(lobbySpawn);
+
+        setPlayerInLobbyMode(player);
+
+        //Stuff which is needed before a game starts
+        if(gameState == GameState.LOBBY){
+            playerTeamMap.put(player, null);
+            playerKitMap.put(player, null);
+            //TODO: give Players the option to choose Kits and their Teams
+        }
+    }
+
+    private void distributePlayersOnTeams(){
+        for(Map.Entry<Player, Team> teamEntry : playerTeamMap.entrySet()){
+            if(teamEntry.getValue() == null){
+                boolean ready = false;
+                int i = 0;
+                while(!ready){
+                    if(teams[i].getPlayers().size() < mapGame.getTeamsize()){
+                        setTeamOfPlayer(teamEntry.getKey(), i);
+                        ready = true;
+                    }
+                    i++;
+                }
+            }
+        }
+    }
+
+    public void setTeamOfPlayer(Player player, int teamID){
+        teams[teamID].addPlayer(player);
+        playerTeamMap.replace(player, teams[teamID]);
+    }
+
+    public void giveEveryPlayerAKit(){
+        //TODO: Write this Method
+    }
+
+    public void setKitOfPlayer(Player player, int teamID){
+        //TODO: Write this Method
+        teams[teamID].addPlayer(player);
+        playerTeamMap.replace(player, teams[teamID]);
+    }
+
     //Starts Warm Up Phase
     private void startWarmUp() {
-        //TODO: Alle Spieler werden auf die Inseln tp't und können keinen Angreifen
-        mapGame.start();
+        //TODO: Alle Spieler erhalten die Sachen von ihrem Kit
+        gameState = GameState.PREPARING;
+
+        //Set ScoreboardTeams //TODO: Warscheinlich Schrott --> Selbst Schaden erkennen und Verhindern
+        for(Map.Entry<Player, Team> teamEntry : playerTeamMap.entrySet()){
+            if(Bukkit.getScoreboardManager().getMainScoreboard().getTeam(Integer.toString(teamEntry.getValue().getId())) == null)
+                Bukkit.getScoreboardManager().getMainScoreboard().registerNewTeam(Integer.toString(teamEntry.getValue().getId()));{
+                Bukkit.getScoreboardManager().getMainScoreboard().getTeam(Integer.toString(teamEntry.getValue().getId())).setAllowFriendlyFire(false);
+                Bukkit.getScoreboardManager().getMainScoreboard().getTeam(Integer.toString(teamEntry.getValue().getId())).setPrefix("[" + teamEntry.getValue().getId() + "]");
+            }
+            Bukkit.getScoreboardManager().getMainScoreboard().getTeam(Integer.toString(teamEntry.getValue().getId())).addEntry(teamEntry.getKey().getName());
+        }
+
+        //Clear all Inventories
+        for(Player player : Bukkit.getOnlinePlayers()){
+            player.getInventory().clear();
+        }
+
+        distributePlayersOnTeams();
+        giveEveryPlayerAKit();
+        mapGame.start(playerTeamMap);
         gameState = GameState.WARM_UP;
     }
 
     //Starts Action Phase
     private void startAction() {
-        //TODO: Alle spieler können sich nun angreifen
         gameState = GameState.RUNNING;
     }
 
-    //Starts Lobby Countdown
-    private void initiateWarmupCountdown() {
-        warmupCountdown(1);
+    public boolean enoughPlayers(){
+        return Bukkit.getOnlinePlayers().size() >= MIN_PLAYERS;
+    }
+
+    public void stopCountdown(){
+        warmupCountdownActive = false;
     }
 
     //Starts Lobby Countdown
-    private void initiateWarmupCountdown(int leftOverSeconds) {
-        warmupCountdown(LOBBY_WAIT_TIME - leftOverSeconds);
+    public void initiateWarmupCountdown() {
+        if(!warmupCountdownActive) {
+            warmupCountdownActive = true;
+            warmupCountdown(1);
+        }
+    }
+
+    //Starts Lobby Countdown
+    public void initiateWarmupCountdown(int leftOverSeconds) {
+        if(!warmupCountdownActive) {
+            warmupCountdownActive = true;
+            warmupCountdown(LOBBY_WAIT_TIME - leftOverSeconds);
+        } else {
+            warmupCountdownActive = false;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    initiateWarmupCountdown(leftOverSeconds);
+                }
+            }.runTaskLater(Main.getJavaPlugin(), 2L);
+        }
     }
 
     private void warmupCountdown(int iteration){
-        if(!warmupCountdown)
+        if(!warmupCountdownActive)
             return;
         if(iteration == LOBBY_WAIT_TIME){
-            gameState = GameState.PREPARING;
+            warmupCountdownActive = false;
             startWarmUp();
+            return;
         }
 
         int leftOverSeconds = LOBBY_WAIT_TIME - iteration;
@@ -95,7 +193,9 @@ public class GameManager {
     //Winning Related Methods
     public void removePlayer(Player player) {
         playerTeamMap.remove(player);
-        checkForWin();
+        playerKitMap.remove(player);
+        if(gameState == GameState.WARM_UP || gameState == GameState.RUNNING)
+            checkForWin();
     }
 
     private void checkForWin() {
@@ -108,23 +208,55 @@ public class GameManager {
                 anderesTeam = true;
             }
         }
-        if(!anderesTeam)
+        if(!anderesTeam) {
             announceWin(team);
+        }
     }
 
     private void announceWin(Team team) {
-        gameState = GameState.FINISHED;
+        gameState = GameState.PREPARING;
 
-        //TODO: Teleport Players to Lobby
-        //TODO: Rewrite Method
+        //Teleports everybody back in the Lobby and Sets everyone in LobbyMode
+        for(Player player : Bukkit.getOnlinePlayers()){
+            joinLobby(player);
+        }
 
-        Bukkit.broadcastMessage(String.format(Language.ROLE_WIN.getFormattedText(), role.getRoleName().getText()));
+        Bukkit.broadcastMessage(String.format(Language.ANNOUNCE_WIN_TEAM.getFormattedText(), team.getId()));
+
+        StringBuilder playerNames = new StringBuilder("");
+        for(Player player : team.getPlayers()){
+            playerNames.append(player.getName());
+            playerNames.append(", ");
+        }
+        playerNames.delete(playerNames.lastIndexOf(","), playerNames.lastIndexOf(",") + 1);
+        Bukkit.broadcastMessage(String.format(Language.ANNOUNCE_WIN_PLAYERS.getFormattedText(), playerNames));
+
         Bukkit.getOnlinePlayers().forEach(player -> {
-            player.sendTitle(String.format(Language.ROLE_WIN.getText(), role.getRoleName().getText()), "", 10, 60, 10);
+            player.sendTitle(String.format(Language.ANNOUNCE_WIN_TEAM.getTitleText(), team.getId()), "", 10, 60, 10);
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.AMBIENT, 1, 1F);
         });
+        gameState = GameState.FINISHED;
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),"stop");
+            }
+        }.runTaskLater(Main.getJavaPlugin(), 10L);
     }
 
+    public void setPlayerInLobbyMode(Player player){
+        player.setPlayerListName(player.getName());
+        player.setInvisible(false);
+        player.setInvulnerable(true);
+        player.setCollidable(true);
+        player.setAllowFlight(false);
+        player.setFlying(false);
+    }
+
+    public MapGame getMapGame() {
+        return mapGame;
+    }
 
     //Public getter methods
     public GameState getGameState() {
