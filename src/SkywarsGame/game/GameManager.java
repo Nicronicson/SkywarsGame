@@ -1,19 +1,23 @@
 package SkywarsGame.game;
 
 import SkywarsGame.Main;
-import SkywarsGame.Util.Language;
+import SkywarsGame.util.Language;
 import SkywarsGame.tools.KitGame;
 import SkywarsGame.tools.Lobby;
 import SkywarsGame.tools.MapGame;
 import SkywarsGame.tools.Team;
 import org.bukkit.*;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
+import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
+import java.io.File;
 import java.util.*;
 
 public class GameManager {
@@ -26,15 +30,16 @@ public class GameManager {
     private final String LOBBY_NAME = "Lobby";
 
     private MapGame mapGame;
-    private Lobby lobby;
-    private String mapName;
+    private final Lobby lobby;
 
     boolean warmupCountdownActive;
 
     private final Map<Player, Team> playerTeamMap;
     private final Map<Player, KitGame> playerKitMap;
+    private final HashMap<Player, Player> lastDamager;
     private GameState gameState;
     private final Team[] teams;
+    private List<KitGame> kits;
 
     public GameManager() {
         warmupCountdownActive = false;
@@ -43,6 +48,10 @@ public class GameManager {
         gameState = GameState.PREPARING;
         lobby = new Lobby();
         mapGame = new MapGame(lobby.getStandartMap());
+        lastDamager = new HashMap<>();
+
+        kits = new ArrayList<>();
+        loadKits();
 
         teams = new Team[mapGame.getSpawnpoints().size()];
         for(int i = 0; i < mapGame.getSpawnpoints().size() ;i++){
@@ -52,7 +61,15 @@ public class GameManager {
         gameState = GameState.LOBBY;
     }
 
+    private void loadKits(){
+        String pathname = "./plugins/SkyWarsAdmin/Kit";
+        for(File file : new File(pathname).listFiles()) {
+            kits.add(new KitGame(file.getAbsolutePath()));
+        }
+    }
+
     public void loadCustomMap(String mapName, Player player){
+        //TODO: implement Command
         try {
             mapGame = new MapGame(mapName);
         } catch (Exception e){
@@ -60,7 +77,19 @@ public class GameManager {
         }
     }
 
-    public void joinLobby(Player player){
+    public void joinLobby(PlayerSpawnLocationEvent e){
+        Player player = e.getPlayer();
+
+        //Teleport to LobbySpawn
+        Location lobbySpawn = Bukkit.getWorld(LOBBY_NAME).getSpawnLocation();
+        lobbySpawn.setWorld(Bukkit.getWorld(LOBBY_NAME));
+
+        e.setSpawnLocation(lobbySpawn);
+
+        setPlayerInLobbyMode(player);
+    }
+
+    public void teleportToLobby(Player player){
         //Teleport to LobbySpawn
         Location lobbySpawn = Bukkit.getWorld(LOBBY_NAME).getSpawnLocation();
         lobbySpawn.setWorld(Bukkit.getWorld(LOBBY_NAME));
@@ -68,7 +97,9 @@ public class GameManager {
         player.teleport(lobbySpawn);
 
         setPlayerInLobbyMode(player);
+    }
 
+    public void joinGame(Player player){
         //Stuff which is needed before a game starts
         if(gameState == GameState.LOBBY){
             playerTeamMap.put(player, null);
@@ -99,18 +130,17 @@ public class GameManager {
     }
 
     public void giveEveryPlayerAKit(){
-        //TODO: Write this Method
+        for(Map.Entry<Player, Team> playerEntry : playerTeamMap.entrySet()){
+            setKitOfPlayer(playerEntry.getKey(), !kits.isEmpty() ? kits.get(0) : null);
+        }
     }
 
-    public void setKitOfPlayer(Player player, int teamID){
-        //TODO: Write this Method
-        teams[teamID].addPlayer(player);
-        playerTeamMap.replace(player, teams[teamID]);
+    public void setKitOfPlayer(Player player, KitGame kit){
+        playerKitMap.replace(player, kit);
     }
 
     //Starts Warm Up Phase
-    private void startWarmUp() {
-        //TODO: Alle Spieler erhalten die Sachen von ihrem Kit
+    public void startWarmUp() {
         gameState = GameState.PREPARING;
 
         //Set ScoreboardTeams //TODO: Warscheinlich Schrott --> Selbst Schaden erkennen und Verhindern
@@ -131,8 +161,56 @@ public class GameManager {
         distributePlayersOnTeams();
         giveEveryPlayerAKit();
         mapGame.start(playerTeamMap);
+
+        distributeKitItems();
+
         gameState = GameState.WARM_UP;
         initiateStartCountdown();
+    }
+
+    private void distributeKitItems(){
+        for(Map.Entry<Player, KitGame> playerKitEntry : playerKitMap.entrySet()){
+            if(playerKitEntry.getValue() != null) {
+                ItemStack helmet = playerKitEntry.getValue().getHelmet();
+                if (helmet != null) {
+                    playerKitEntry.getValue().getHelmetENC().forEach((key, value) -> helmet.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(key))), value));
+                    playerKitEntry.getKey().getInventory().setHelmet(helmet);
+                }
+
+                ItemStack chestplate = playerKitEntry.getValue().getChestplate();
+                if (chestplate != null) {
+                    playerKitEntry.getValue().getChestplateENC().forEach((key, value) -> chestplate.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(key))), value));
+                    playerKitEntry.getKey().getInventory().setChestplate(chestplate);
+                }
+
+                ItemStack leggings = playerKitEntry.getValue().getLeggings();
+                if (leggings != null) {
+                    playerKitEntry.getValue().getLeggingsENC().forEach((key, value) -> leggings.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(key))), value));
+                    playerKitEntry.getKey().getInventory().setLeggings(leggings);
+                }
+
+                ItemStack boots = playerKitEntry.getValue().getBoots();
+                if (boots != null) {
+                    playerKitEntry.getValue().getBootsENC().forEach((key, value) -> boots.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(key))), value));
+                    playerKitEntry.getKey().getInventory().setBoots(boots);
+                }
+
+                ItemStack leftHand = playerKitEntry.getValue().getLeftHand();
+                if (leftHand != null) {
+                    playerKitEntry.getValue().getLeftHandENC().forEach((key, value) -> leftHand.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(key))), value));
+                    playerKitEntry.getKey().getInventory().setItemInOffHand(leftHand);
+                }
+
+                int i = 0;
+                ItemStack[] inventory = new ItemStack[36];
+                for (ItemStack itemSlot : playerKitEntry.getValue().getInventory()) {
+                    playerKitEntry.getValue().getInventoryENC().get(i).forEach((key, value) -> itemSlot.addUnsafeEnchantment(Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(key))), value));
+                    inventory[i] = itemSlot;
+                    i++;
+                }
+                playerKitEntry.getKey().getInventory().setStorageContents(inventory);
+            }
+        }
     }
 
     private void initiateStartCountdown(){
@@ -155,7 +233,7 @@ public class GameManager {
             public void run() {
                 startCountdown(iteration + 1);
             }
-        }.runTaskLater(Main.getJavaPlugin(), 1L);
+        }.runTaskLater(Main.getJavaPlugin(), 20L); //1 Second
     }
 
     private void broadcastStartCountdown(int time){
@@ -185,6 +263,7 @@ public class GameManager {
         }
     }
 
+    //TODO: Write Command
     //Starts Lobby Countdown
     public void initiateWarmupCountdown(int leftOverSeconds) {
         if(!warmupCountdownActive) {
@@ -197,7 +276,7 @@ public class GameManager {
                 public void run() {
                     initiateWarmupCountdown(leftOverSeconds);
                 }
-            }.runTaskLater(Main.getJavaPlugin(), 2L);
+            }.runTaskLater(Main.getJavaPlugin(), 30L);//1 Second
         }
     }
 
@@ -220,7 +299,7 @@ public class GameManager {
             public void run() {
                 warmupCountdown(iteration + 1);
             }
-        }.runTaskLater(Main.getJavaPlugin(), 1L);
+        }.runTaskLater(Main.getJavaPlugin(), 20L); //1 Second
     }
 
 
@@ -252,7 +331,7 @@ public class GameManager {
 
         //Teleports everybody back in the Lobby and Sets everyone in LobbyMode
         for(Player player : Bukkit.getOnlinePlayers()){
-            joinLobby(player);
+            teleportToLobby(player);
         }
 
         Bukkit.broadcastMessage(String.format(Language.ANNOUNCE_WIN_TEAM.getFormattedText(), team.getId()));
@@ -280,6 +359,7 @@ public class GameManager {
     }
 
     public void setPlayerInLobbyMode(Player player){
+        player.setGameMode(GameMode.SURVIVAL);
         player.setPlayerListName(player.getName());
         player.setInvisible(false);
         player.setInvulnerable(true);
@@ -340,4 +420,7 @@ public class GameManager {
         }
     }
 
+    public HashMap<Player, Player> getLastDamager() {
+        return lastDamager;
+    }
 }

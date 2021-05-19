@@ -1,7 +1,7 @@
 package SkywarsGame.tools;
 
 import SkywarsCore.Map;
-import SkywarsGame.Util.MapUtilities;
+import SkywarsGame.util.MapUtilities;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,7 +17,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class MapGame extends Map {
 

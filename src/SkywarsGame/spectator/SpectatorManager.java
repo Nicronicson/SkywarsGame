@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,27 @@ public class SpectatorManager {
         this.gameManager = gameManager;
     }
 
-    public void joinOrRespawnAsSpectator(Player player){
+    public void joinAsSpectator(PlayerSpawnLocationEvent e){
+
+        Player player = e.getPlayer();
+
+        spectators.add(player);
+
+        //Teleport to SpectatorSpawn
+        Location spectatorSpawn = gameManager.getMapGame().getMiddle();
+        spectatorSpawn.setWorld(Bukkit.getWorld(gameManager.getMapGame().getMapname()));
+
+        e.setSpawnLocation(spectatorSpawn);
+
+        player.setPlayerListName(ChatColor.GRAY + player.getName() + ChatColor.RED + " ✗");
+        player.setInvisible(true);
+        player.setInvulnerable(true);
+        player.setCollidable(false);
+        player.setAllowFlight(true);
+        player.setFlying(true);
+    }
+
+    public void RespawnAsSpectator(Player player){
 
         spectators.add(player);
 
@@ -28,6 +49,7 @@ public class SpectatorManager {
 
         player.teleport(spectatorSpawn);
 
+        player.setHealth(20);
         player.setPlayerListName(ChatColor.GRAY + player.getName() + ChatColor.RED + " ✗");
         player.setInvisible(true);
         player.setInvulnerable(true);

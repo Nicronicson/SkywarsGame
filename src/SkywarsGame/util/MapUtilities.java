@@ -1,4 +1,4 @@
-package SkywarsGame.Util;
+package SkywarsGame.util;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

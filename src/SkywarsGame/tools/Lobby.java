@@ -1,6 +1,6 @@
 package SkywarsGame.tools;
 
-import SkywarsGame.Util.MapUtilities;
+import SkywarsGame.util.MapUtilities;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.yaml.snakeyaml.Yaml;
@@ -8,8 +8,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Lobby {
     Location spawn;
