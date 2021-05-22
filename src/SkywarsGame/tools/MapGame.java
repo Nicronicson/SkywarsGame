@@ -60,6 +60,7 @@ public class MapGame extends Map {
             }
             setSpawnpoints(spawnpoints);
 
+            setTeamsize((Integer) map.get("teamsize"));
         } catch (Exception e){
             Bukkit.broadcastMessage(e.getMessage());
         }

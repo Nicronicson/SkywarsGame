@@ -42,7 +42,9 @@ public class ChestGame {
                 Map<String, Object> map = yaml.loadAs(inputStream, Map.class);
                 Bukkit.broadcastMessage(map.toString());
 
-                ItemStack item = new ItemStack(Material.getMaterial((String) ((Map<String, Object>) map.get("item")).get("type")));
+                Bukkit.broadcastMessage(((String) ((Map<String, Object>) map.get("item")).get("type")).toUpperCase(Locale.ROOT));//TODO: funkt nicht AKA: to upper case
+
+                ItemStack item = new ItemStack(Material.getMaterial(((String) ((Map<String, Object>) map.get("item")).get("type")).toUpperCase(Locale.ROOT)));
                 item.setAmount((Integer) ((Map<String, Object>) map.get("item")).get("amount"));
                 ((Damageable) item.getItemMeta()).setDamage((Integer) ((Map<String, Object>) map.get("item")).get("durability"));
 
@@ -65,8 +67,9 @@ public class ChestGame {
 
         for(ChestEntry chestEntry : chestEntryList){
             if(chestContentUnsorted.size() < maxItems && chestContentUnsorted.size() < chestSize){
+                //1 = 0.01
                 int min = 1;
-                int max = 100;
+                int max = 10000;
 
                 Random random = new Random();
 
@@ -78,6 +81,9 @@ public class ChestGame {
                     }
                     chestContentUnsorted.add(itemStack);
                 }
+
+                value = random.nextInt(max + min) + min;
+
                 if (middle && value <= chestEntry.getMiddleChance()) {
                     ItemStack itemStack = chestEntry.getItem();
                     for (Map.Entry<String, Integer> enchantment : chestEntry.getItemENC().entrySet()) {

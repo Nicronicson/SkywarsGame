@@ -8,11 +8,13 @@ import org.bukkit.entity.Player;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SpectatorManager {
 
-    private final List<Player> spectators = new ArrayList<>();
+    private final Set<Player> spectators = new HashSet<>();
     private final GameManager gameManager;
 
     public SpectatorManager(GameManager gameManager){

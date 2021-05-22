@@ -3,16 +3,21 @@ package SkywarsGame.game;
 import SkywarsGame.Main;
 import SkywarsGame.util.Language;
 import SkywarsGame.spectator.SpectatorManager;
+import net.minecraft.server.v1_16_R3.EntityExperienceOrb;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.entity.*;
+import org.bukkit.event.player.*;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class GameListener implements Listener {
 
@@ -24,12 +29,8 @@ public class GameListener implements Listener {
         this.gameManager = gameManager;
     }
 
-
-    //TODO: TEst
     @EventHandler
-    public void onPlayerJoin(PlayerSpawnLocationEvent e){
-        //TODO:Test
-        Bukkit.broadcastMessage("Player JOIN");
+    public void onPlayerSpawnLocation(PlayerSpawnLocationEvent e){
         //Determine PlayerProperties
         switch (gameManager.getGameState()){
             /*case PREPARING:
@@ -44,12 +45,6 @@ public class GameListener implements Listener {
                 break;
 
             case LOBBY:
-                if(gameManager.enoughPlayers()){
-                    gameManager.initiateWarmupCountdown();
-                }
-                else {
-                    gameManager.stopCountdown();
-                }
                 gameManager.joinGame(e.getPlayer());
 
             case FINISHED:
@@ -63,15 +58,47 @@ public class GameListener implements Listener {
     }
 
     @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent e){
+        //Custom join message
+        if(gameManager.getGameState() == GameState.LOBBY || gameManager.getGameState() == GameState.FINISHED){
+            e.setJoinMessage(String.format(Language.PLAYER_JOIN.getText(), e.getPlayer().getName()));
+        } else {
+            e.setJoinMessage("");
+        }
+
+        //Check if there are enough players to start
+        if(gameManager.getGameState() == GameState.LOBBY) {
+            if(gameManager.enoughPlayers()){
+                gameManager.initiateWarmupCountdown();
+            }
+            else {
+                gameManager.broadcastNeededPlayers();
+                gameManager.stopCountdown();
+            }
+        }
+    }
+
+    @EventHandler
     public void onPlayerLeave(PlayerQuitEvent e){
+        //Custom leave message
+        if(!spectatorManager.isSpectator(e.getPlayer())){
+            e.setQuitMessage(String.format(Language.PLAYER_LEAVE.getText(), e.getPlayer().getName()));
+        } else {
+            e.setQuitMessage("");
+        }
+
+        //Remove Player from all important Game entries
         removePlayer(e.getPlayer());
     }
 
     private void removePlayer(Player player){
         spectatorManager.removeSpectator(player);
         gameManager.removePlayer(player);
-        gameManager.setPlayerCount();
+        if(gameManager.getGameState() == GameState.WARM_UP || gameManager.getGameState() == GameState.RUNNING) {
+            gameManager.setPlayerCount();
+        }
         if(gameManager.getGameState() == GameState.LOBBY && !gameManager.enoughPlayers()){
+            gameManager.broadcastNeededPlayers();
             gameManager.stopCountdown();
         }
     }
@@ -84,12 +111,20 @@ public class GameListener implements Listener {
             switch (gameManager.getGameState()) {
                 //Cancel damaged received from other players in the Warmup phase
                 case WARM_UP:
+                    Bukkit.broadcastMessage("WARM_UP");
                     if (eBYe != null && eBYe.getDamager() instanceof Player) {
                         e.setCancelled(true);
                     }
                     break;
 
                 case RUNNING:
+                    Bukkit.broadcastMessage("RUNNING");
+                    //Cancel damage from teammates
+                    if(eBYe != null && eBYe.getDamager() instanceof Player && gameManager.getPlayerTeamMap().get((Player) eBYe.getEntity()).isPlayerInTeam((Player) eBYe.getDamager())){
+                        e.setCancelled(true);
+                        break;
+                    }
+
                     //Save last damager
                     if (eBYe != null && eBYe.getDamager() instanceof Player) {
                         if(gameManager.getLastDamager().containsKey((Player) eBYe.getEntity()))
@@ -104,8 +139,16 @@ public class GameListener implements Listener {
                         if (eBYe != null && eBYe.getDamager() instanceof Player) {
                             if (gameManager.getLastDamager().containsKey((Player) eBYe.getEntity())) {
                                 gameManager.increaseKillCounter(gameManager.getLastDamager().get((Player) eBYe.getEntity()));
+
+                                //Play death sound
+                                ((Player) eBYe.getEntity()).playSound(eBYe.getEntity().getLocation(), Sound.BLOCK_ANVIL_LAND, SoundCategory.AMBIENT, 1, 0.5F);
+
+                                //Play kill sound
+                                ((Player) eBYe.getDamager()).playSound(eBYe.getDamager().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.AMBIENT, 1, 1.5F);
                             }
                         }
+
+                        e.setCancelled(true);
 
                         //Remove player when he dies
                         removePlayer((Player) e.getEntity());
@@ -132,28 +175,4 @@ public class GameListener implements Listener {
             }
         }
     }
-
-    /*
-    @EventHandler
-    public void onPlayerFallsOutOfLobby(EntityDamageEvent e){ //Teleport player to spawn when falling in Lobby
-        if(gameManager.getGameState() == GameState.LOBBY && gameManager.getGameState() == GameState.FINISHED) {
-            if (e.getEntity() instanceof Player && e.getCause() == EntityDamageEvent.DamageCause.VOID) {
-                e.setCancelled(true);
-                gameManager.teleportToLobby((Player) e.getEntity());
-            }
-        }
-    }*/
-
-    /*
-    @EventHandler
-    public void onPlayerDeath(EntityDamageByEntityEvent event) { //Increase Kill counter
-        if(gameManager.getGameState() == GameState.WARM_UP || gameManager.getGameState() == GameState.RUNNING) {
-            if (event.getEntity() instanceof Player && event.getDamager() instanceof Player) {
-                if(lastDamager.containsKey(event.getEntity()))
-                    gameManager.increaseKillCounter(lastDamager.get(event.getEntity()));
-            }
-        }
-    }
-    */
-
 }
