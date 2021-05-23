@@ -73,7 +73,7 @@ public class KitGame extends Kit {
                 inventory = new ItemStack[36];
 
                 int i = 0;
-                for(Map<String, Object> itemMap : (List<Map<String, Object>>) map.get("inventoryMap")){
+                for(Map<String, Object> itemMap : (List<Map<String, Object>>) map.get("inventory")){
                     if(!itemMap.isEmpty()) {
                         inventory[i] = new ItemStack(Material.getMaterial(((String) itemMap.get("type")).toUpperCase(Locale.ROOT)));
                         inventory[i].setAmount((Integer) itemMap.get("amount"));

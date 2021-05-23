@@ -16,9 +16,10 @@ public class Team {
     public Team(int id) {
         players = new HashSet<>();
         this.id = id;
-        while(id >= 16){
-            id -= 16;
+        while(id >= 6){
+            id -= 6;
         }
+        id += 9;
         color = ChatColor.values()[id];
         kills = 0;
     }

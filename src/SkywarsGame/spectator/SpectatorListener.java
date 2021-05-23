@@ -2,11 +2,15 @@ package SkywarsGame.spectator;
 
 import SkywarsGame.Main;
 import SkywarsGame.game.GameManager;
+import SkywarsGame.game.GameState;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -22,25 +26,16 @@ public class SpectatorListener implements Listener {
         this.gameManager = gameManager;
     }
 
-    /*
-    @EventHandler
-    public void onSpectatorRespawn(PlayerRespawnEvent e) {
-        Bukkit.broadcastMessage("Spectator Respawn");
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                spectatorManager.RespawnAsSpectator(e.getPlayer());
-            }
-        }.runTaskLater(Main.getJavaPlugin(), 5L);
-    }
-    */
+    //Only things, which aren't present in GameManager:
 
+    /*
     @EventHandler
     public void onSpectatorDamage(EntityDamageByEntityEvent e){
         if(e.getDamager() instanceof Player && spectatorManager.isSpectator((Player)e.getDamager())) e.setCancelled(true);
 
         if(e.getEntity() instanceof Player && spectatorManager.isSpectator((Player)e.getEntity())) e.setCancelled(true);
     }
+     */
 
     @EventHandler
     public void onSpectatorArrowPickup(PlayerPickupArrowEvent e){
@@ -51,6 +46,4 @@ public class SpectatorListener implements Listener {
     public void onSpectatorItemPickup(EntityPickupItemEvent e){
         if(e.getEntity() instanceof Player && spectatorManager.isSpectator((Player) e.getEntity())) e.setCancelled(true);
     }
-
-
 }

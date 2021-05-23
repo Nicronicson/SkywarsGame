@@ -1,10 +1,12 @@
 package SkywarsGame.spectator;
 
+import SkywarsGame.Main;
 import SkywarsGame.game.GameManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import java.util.ArrayList;
@@ -35,10 +37,18 @@ public class SpectatorManager {
 
         player.setPlayerListName(ChatColor.GRAY + player.getName() + ChatColor.RED + " ✗");
         player.setInvisible(true);
-        player.setInvulnerable(true);
-        player.setCollidable(false);
-        player.setAllowFlight(true);
-        player.setFlying(true);
+
+        //Everything which needs to be set after spawning
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                player.setAllowFlight(true);
+                player.setFlying(true);
+                player.setCollidable(false);
+                player.setInvulnerable(true);
+                player.getInventory().clear();
+            }
+        }.runTaskLater(Main.getJavaPlugin(), 2L);
     }
 
     public void RespawnAsSpectator(Player player){
@@ -58,6 +68,7 @@ public class SpectatorManager {
         player.setCollidable(false);
         player.setAllowFlight(true);
         player.setFlying(true);
+        player.getInventory().clear();
     }
 
     public void removeSpectator(Player player){
@@ -66,6 +77,14 @@ public class SpectatorManager {
 
     public boolean isSpectator(Player player){
         return spectators.contains(player);
+    }
+
+    public void sendMessageToSpectators(String message){
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            if(isSpectator(player)) {
+                player.sendMessage(message);
+            }
+        });
     }
 
 }

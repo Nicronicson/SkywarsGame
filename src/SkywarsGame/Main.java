@@ -1,8 +1,8 @@
 package SkywarsGame;
 
 import SkywarsGame.Chat.ChatListener;
-import SkywarsGame.commands.TestCommand;
-import SkywarsGame.commands.commands.SkywarsCCT;
+import SkywarsGame.commands.Cancel;
+import SkywarsGame.commands.Start;
 import SkywarsGame.game.GameListener;
 import SkywarsGame.game.GameManager;
 import SkywarsGame.spectator.SpectatorListener;
@@ -21,10 +21,6 @@ public class Main extends JavaPlugin {
     private GameManager gameManager;
     private SpectatorManager spectatorManager;
 
-    public Main(){
-
-    }
-
     public void onEnable(){
         getLogger().info("Loading Skywars Plugin.");
         javaPlugin = this;
@@ -38,11 +34,6 @@ public class Main extends JavaPlugin {
         gameManager = new GameManager();
         spectatorManager = new SpectatorManager(gameManager);
 
-        /*
-        getLogger().info("Load Troubles Worlds.");
-        loadWorlds();
-         */
-
         getLogger().info("Loading Skywars Commands.");
         registerCommands();
 
@@ -52,22 +43,17 @@ public class Main extends JavaPlugin {
         getLogger().info("Essence primed and ready.");
     }
 
-    /*
-    private void loadWorlds() {
-        getServer().createWorld(new WorldCreator("railroad"));
-    }
-    */
-
     private void registerCommands(){
-        getCommand("skywars").setExecutor(new SkywarsCCT(gameManager));
-        getCommand("testcommand").setExecutor(new TestCommand());
+        getCommand("skywars").setExecutor(new Start(gameManager));
+        getCommand("skywars").setExecutor(new Cancel(gameManager));
+        //getCommand("testcommand").setExecutor(new TestCommand());
     }
 
     private void registerListeners(){
-        getServer().getPluginManager().registerEvents(new ChatListener(gameManager), this);
+        getServer().getPluginManager().registerEvents(new ChatListener(gameManager, spectatorManager), this);
         getServer().getPluginManager().registerEvents(new SpectatorListener(spectatorManager, gameManager), this);
         getServer().getPluginManager().registerEvents(new GameListener(spectatorManager, gameManager), this);
-        getServer().getPluginManager().registerEvents(new WorldProtectionListener(gameManager), this);
+        getServer().getPluginManager().registerEvents(new WorldProtectionListener(gameManager, spectatorManager), this);
     }
 
     public static JavaPlugin getJavaPlugin() {

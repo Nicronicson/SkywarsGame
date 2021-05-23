@@ -40,9 +40,6 @@ public class ChestGame {
             Yaml yaml = new Yaml();
             try {
                 Map<String, Object> map = yaml.loadAs(inputStream, Map.class);
-                Bukkit.broadcastMessage(map.toString());
-
-                Bukkit.broadcastMessage(((String) ((Map<String, Object>) map.get("item")).get("type")).toUpperCase(Locale.ROOT));//TODO: funkt nicht AKA: to upper case
 
                 ItemStack item = new ItemStack(Material.getMaterial(((String) ((Map<String, Object>) map.get("item")).get("type")).toUpperCase(Locale.ROOT)));
                 item.setAmount((Integer) ((Map<String, Object>) map.get("item")).get("amount"));

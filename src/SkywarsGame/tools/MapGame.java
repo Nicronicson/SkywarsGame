@@ -10,6 +10,7 @@ import org.bukkit.block.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -25,12 +26,12 @@ public class MapGame extends Map {
         load();
     }
 
-    public void start(java.util.Map<Player, Team> playerTeamMap){
+    public void start(java.util.Map<Player, Team> playerTeamMap) {
         fillChests();
         teleportAllTeams(playerTeamMap);
     }
 
-    public void load(){
+    public void load() {
         String pathname = "./plugins/SkyWarsAdmin/Map";
         String filename = mapname + "-map" + ".yml";
         try {
@@ -39,13 +40,13 @@ public class MapGame extends Map {
             java.util.Map<String, Object> map = yaml.loadAs(inputStream, java.util.Map.class);
 
             List<Location> chestLocations = new ArrayList<>();
-            for(java.util.Map<String, Object> mapEntry : (List<java.util.Map<String, Object>>) map.get("chests")){
+            for (java.util.Map<String, Object> mapEntry : (List<java.util.Map<String, Object>>) map.get("chests")) {
                 chestLocations.add(MapUtilities.getLocationFromMap(mapEntry));
             }
             setChests(chestLocations);
 
             List<Location> middleChestLocations = new ArrayList<>();
-            for(java.util.Map<String, Object> mapEntry : (List<java.util.Map<String, Object>>) map.get("middleChests")){
+            for (java.util.Map<String, Object> mapEntry : (List<java.util.Map<String, Object>>) map.get("middleChests")) {
                 middleChestLocations.add(MapUtilities.getLocationFromMap(mapEntry));
             }
             setMiddleChests(middleChestLocations);
@@ -55,28 +56,28 @@ public class MapGame extends Map {
             setPos2(MapUtilities.getLocationFromMap((java.util.Map<String, Object>) map.get("pos2")));
 
             List<Location> spawnpoints = new ArrayList<>();
-            for(java.util.Map<String, Object> mapEntry : (List<java.util.Map<String, Object>>) map.get("spawnpoints")){
+            for (java.util.Map<String, Object> mapEntry : (List<java.util.Map<String, Object>>) map.get("spawnpoints")) {
                 spawnpoints.add(MapUtilities.getLocationFromMap(mapEntry));
             }
             setSpawnpoints(spawnpoints);
 
             setTeamsize((Integer) map.get("teamsize"));
-        } catch (Exception e){
+        } catch (Exception e) {
             Bukkit.broadcastMessage(e.getMessage());
         }
     }
 
-    public void fillChests(){
+    public void fillChests() {
         World map = Bukkit.getWorld(getMapname());
         ChestGame chests = new ChestGame();
-        for(Location chestLocation : getChests()){
+        for (Location chestLocation : getChests()) {
             try {
                 ((Chest) map.getBlockAt(chestLocation).getState()).getBlockInventory().setContents(chests.getRandomChestContent(false));
-            } catch (Exception e){
+            } catch (Exception e) {
                 Bukkit.broadcastMessage(e.getMessage());
             }
         }
-        for(Location chestLocation : getMiddleChests()){
+        for (Location chestLocation : getMiddleChests()) {
             try {
                 BlockData data = map.getBlockAt(chestLocation).getState().getBlockData();
                 BlockFace face = ((Directional) data).getFacing();
@@ -88,21 +89,23 @@ public class MapGame extends Map {
                 map.getBlockAt(chestLocation).setBlockData(blockData);
 
                 ((Chest) map.getBlockAt(chestLocation).getState()).getBlockInventory().setContents(chests.getRandomChestContent(true));
-            } catch (Exception e){
+            } catch (Exception e) {
                 Bukkit.broadcastMessage(e.getMessage());
             }
         }
     }
 
-    private void teleportAllTeams(java.util.Map<Player, Team> playerTeamMap){
-        for(Player player : Bukkit.getOnlinePlayers()){
+    private void teleportAllTeams(java.util.@NotNull Map<Player, Team> playerTeamMap) {
+        playerTeamMap.forEach(((player, team) -> {
             try {
-                teleportPlayer(player, playerTeamMap.get(player).getId());
-            } catch (Exception e){}
-        }
+                teleportPlayer(player, team.getId());
+            } catch (Exception e) {
+                Bukkit.broadcastMessage("Teleporting failed");
+            }
+        }));
     }
 
-    private void teleportPlayer(Player player, int spawnpoint){
+    private void teleportPlayer(Player player, int spawnpoint) {
         Location location = getSpawnpoints().get(spawnpoint);
         location.setWorld(Bukkit.getWorld(getMapname()));
         player.teleport(location);
