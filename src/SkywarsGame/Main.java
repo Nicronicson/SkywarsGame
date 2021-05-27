@@ -16,7 +16,7 @@ import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
-    //TODO: [General] -Potions -ChestsAdd(EnderPearls, SnowBalls, Eggs) -Hide Spectators
+    //TODO: [General] -Potions -ChestsAdd(EnderPearls, SnowBalls, Eggs) -Hide Spectators -Replace toUpperCase mit dem anderen
 
     private static JavaPlugin javaPlugin;
 

@@ -11,12 +11,24 @@ import java.util.*;
 
 public class Team {
     public static String TEAMSELECTOR_NAME = "Teamauswahl";
-    public static ItemStack getTeamSelector(){
-        ItemStack teamSelector = new ItemStack(Material.BLUE_BED, 1);
+
+    public static ItemStack getTeamSelector() {
+        ItemStack teamSelector = new ItemStack(Material.WHITE_BED, 1);
         ItemMeta teamSelectorItemMeta = teamSelector.getItemMeta();
 
         assert teamSelectorItemMeta != null;
         teamSelectorItemMeta.setDisplayName(ChatColor.YELLOW + TEAMSELECTOR_NAME);
+        teamSelector.setItemMeta(teamSelectorItemMeta);
+
+        return teamSelector;
+    }
+
+    public static ItemStack getTeamSelector(ChatColor color, int teamId) {
+        ItemStack teamSelector = new ItemStack(visualColor.get(color), 1);
+        ItemMeta teamSelectorItemMeta = teamSelector.getItemMeta();
+
+        assert teamSelectorItemMeta != null;
+        teamSelectorItemMeta.setDisplayName(ChatColor.YELLOW + TEAMSELECTOR_NAME + " (" + color + "Team " + teamId + ChatColor.YELLOW + ")");
         teamSelector.setItemMeta(teamSelectorItemMeta);
 
         return teamSelector;
@@ -44,7 +56,7 @@ public class Team {
         this.gameManager = gameManager;
         players = new HashSet<>();
         this.id = id;
-        while(id >= 6){
+        while (id >= 6) {
             id -= 6;
         }
         id += 9;
@@ -53,11 +65,11 @@ public class Team {
         kills = 0;
     }
 
-    public void addKill(){
+    public void addKill() {
         kills++;
     }
 
-    public int getKills(){
+    public int getKills() {
         return kills;
     }
 
@@ -69,15 +81,15 @@ public class Team {
         this.id = id;
     }
 
-    public Set<Player> getPlayers(){
+    public Set<Player> getPlayers() {
         return players;
     }
 
-    public void addPlayer(Player player){
+    public void addPlayer(Player player) {
         players.add(player);
     }
 
-    public void removePlayer(Player player){
+    public void removePlayer(Player player) {
         players.remove(player);
     }
 
@@ -85,7 +97,7 @@ public class Team {
         return color;
     }
 
-    public boolean isPlayerInTeam(Player player){
+    public boolean isPlayerInTeam(Player player) {
         return players.contains(player);
     }
 

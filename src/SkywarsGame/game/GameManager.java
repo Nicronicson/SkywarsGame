@@ -240,8 +240,7 @@ public class GameManager {
             player.getInventory().clear();
 
             //Set everyone's color
-            player.setPlayerListName(String.format(Language.PLAYER_TEAM_NAME.getText(), team.getColor(), team.getId(), player.getName()));
-            //player.setPlayerListName("[" + team.getColor() + "T" + team.getId() + ChatColor.WHITE + "] " + ChatColor.GREEN + player.getName());
+            //player.setPlayerListName(String.format(Language.PLAYER_TEAM_NAME.getText(), team.getColor(), team.getId(), player.getName()));
 
             setPlayerInGameMode(player);
 

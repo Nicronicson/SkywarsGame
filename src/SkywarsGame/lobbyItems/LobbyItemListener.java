@@ -33,7 +33,9 @@ public class LobbyItemListener implements Listener {
                 openKitInventory(e.getPlayer());
             }
             //Team:
-            if (e.getItem() != null && e.getItem().getItemMeta() != null && e.getItem().getItemMeta().getDisplayName().equals(ChatColor.YELLOW + Team.TEAMSELECTOR_NAME)) {
+            if (e.getItem() != null && e.getItem().getItemMeta() != null &&
+                    e.getItem().getItemMeta().getDisplayName().length() >= (ChatColor.YELLOW + Team.TEAMSELECTOR_NAME).length() &&
+                    e.getItem().getItemMeta().getDisplayName().startsWith(ChatColor.YELLOW + Team.TEAMSELECTOR_NAME)) {
                 openTeamInventory(e.getPlayer());
             }
         }
@@ -58,7 +60,7 @@ public class LobbyItemListener implements Listener {
         while(gameManager.getTeams().length > invSize)
             invSize += 9;
 
-        Inventory inv = Bukkit.createInventory(null, invSize, ChatColor.YELLOW + KitGame.KITSELECTOR_NAME);
+        Inventory inv = Bukkit.createInventory(null, invSize, ChatColor.YELLOW + Team.TEAMSELECTOR_NAME);
 
         Arrays.stream(gameManager.getTeams()).forEach(team -> inv.addItem(team.getItem()));
 
@@ -81,9 +83,18 @@ public class LobbyItemListener implements Listener {
 
             if (e.getView().getTitle().equals(ChatColor.YELLOW + Team.TEAMSELECTOR_NAME)) {
                 Player player = (Player) e.getWhoClicked();
-                int teamId = Character.getNumericValue(Objects.requireNonNull(e.getCurrentItem().getItemMeta()).getDisplayName().charAt(Objects.requireNonNull(e.getCurrentItem().getItemMeta()).getDisplayName().length() - 1));
 
-                if(gameManager.setTeamOfPlayer(player, teamId)) player.sendMessage(Language.TEAM_CHANGE.getFormattedText());
+                int teamId = Integer.parseInt(Objects.requireNonNull(e.getCurrentItem().getItemMeta()).getDisplayName().substring((ChatColor.YELLOW + "Team ").length()));
+
+                if(gameManager.setTeamOfPlayer(player, teamId)){
+                    //Set List-Name
+                    player.setPlayerListName(String.format(Language.PLAYER_TEAM_NAME.getText(), gameManager.getTeams()[teamId].getColor(), gameManager.getTeams()[teamId].getId(), player.getName()));
+
+                    //Set coloured KitSelector
+                    player.getInventory().setItem(1, Team.getTeamSelector(gameManager.getTeams()[teamId].getColor(), teamId));
+
+                    player.sendMessage(Language.TEAM_CHANGE.getFormattedText());
+                }
                 else player.sendMessage(Language.TEAM_VOLL.getFormattedText());
 
                 player.closeInventory();
