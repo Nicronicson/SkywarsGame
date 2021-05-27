@@ -1,4 +1,4 @@
-package SkywarsGame.tools;
+package SkywarsGame.entities;
 
 import SkywarsCore.Map;
 import SkywarsGame.util.MapUtilities;

@@ -2,6 +2,8 @@ package SkywarsGame.game;
 
 import SkywarsGame.util.Language;
 import SkywarsGame.spectator.SpectatorManager;
+import SkywarsGame.util.Sounds;
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
@@ -77,6 +79,8 @@ public class GameListener implements Listener {
     public void onPlayerGetHurt(EntityDamageEvent e) {
         EntityDamageByEntityEvent eBYe = e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK ? (EntityDamageByEntityEvent) e : null;
 
+        //Bukkit.broadcastMessage("Hurt");
+
         if (e.getEntity() instanceof Player) {
             switch (gameManager.getGameState()) {
                 //Cancel damaged received from other players in the Warmup phase
@@ -121,6 +125,8 @@ public class GameListener implements Listener {
                     }
                 }
 
+                //Bukkit.broadcastMessage("Check Dying");
+
                 //Checking if Player would die
                 checkDying(e);
 
@@ -156,14 +162,14 @@ public class GameListener implements Listener {
             //Increase Kill Counter if it was caused by a Player
             String deathMessage = null;
             if (gameManager.getLastDamager().containsKey(player) && gameManager.getPlayerTeamMap().get(player) != null) {
-                gameManager.getPlayerTeamMap().get(player).addKill();
+                gameManager.getPlayerTeamMap().get(gameManager.getLastDamager().get(player)).addKill();
                 gameManager.updateKillCounter(gameManager.getLastDamager().get(player));
 
                 //Play death sound
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, SoundCategory.AMBIENT, 1, 0.5F);
+                Sounds.DEATH.playSoundForPlayer(player);
 
                 //Play kill sound
-                gameManager.getLastDamager().get(player).playSound(gameManager.getLastDamager().get(player).getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.AMBIENT, 1, 1.5F);
+                Sounds.KILL.playSoundForPlayer(gameManager.getLastDamager().get(player));
 
                 deathMessage = String.format(Language.DEATH_BY_PLAYER.getFormattedText(),
                         String.format(Language.PLAYER_TEAM_NAME.getText(), gameManager.getPlayerTeamMap().get(player).getColor(), gameManager.getPlayerTeamMap().get(player).getId(), player.getName()),

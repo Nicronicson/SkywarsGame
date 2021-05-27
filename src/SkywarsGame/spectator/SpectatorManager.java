@@ -9,10 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SpectatorManager {
 
@@ -69,6 +66,7 @@ public class SpectatorManager {
         player.setAllowFlight(true);
         player.setFlying(true);
         player.getInventory().clear();
+        player.setScoreboard(Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard());
     }
 
     public void removeSpectator(Player player){

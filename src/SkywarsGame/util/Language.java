@@ -19,11 +19,17 @@ public enum Language {
     //TITLE_START_FIGHT("WarmUp Phase endet in: %d"),
     PLAYERS_NEEDED("Es werden noch " + ChatColor.RED + "%d" + ChatColor.GRAY + " weitere Spieler benötigt!"),
     PLAYERS_NEEDED_ONE("Es wird noch " + ChatColor.RED + "1" + ChatColor.GRAY + " weiterer Spieler benötigt!"),
-    ANNOUNCE_WIN_TEAM("Team %d hat gewonnen."),
-    ANNOUNCE_WIN_PLAYERS("%s"),
-    PLAYER_TEAM_NAME("[%sT%d" + ChatColor.GRAY + "] " + ChatColor.WHITE + "%s" + ChatColor.GRAY),
+    GAME_FINISHED(ChatColor.GRAY + "---Spiel vorbei---"),
+    ANNOUNCE_WIN_TEAM("%sTeam %d" + ChatColor.GRAY + " hat gewonnen."),
+    ANNOUNCE_WIN_PLAYERS("%s" + ChatColor.GRAY + "haben gewonnen."),
+    ANNOUNCE_WIN_PLAYER("%s" + ChatColor.GRAY + "hat gewonnen."),
+    PLAYER_TEAM_NAME(ChatColor.GRAY + "[%sT%d" + ChatColor.GRAY + "] " + ChatColor.WHITE + "%s" + ChatColor.GRAY),
     DEATH("%s ist gestorben."),
-    DEATH_BY_PLAYER("%s wurde von %s ermordet.");
+    DEATH_BY_PLAYER("%s wurde von %s ermordet."),
+    CUSTOM("%s"),
+    KIT_CHANGE("Das Kit wurde erfolgreich gewechselt."),
+    TEAM_CHANGE("Das Team wurde erfolgreich gewechselt."),
+    TEAM_VOLL("Das Team ist voll.");
 
     private static final String SYSTEM_PREFIX = ChatColor.AQUA + "Skywars " + ChatColor.DARK_GRAY + "» ";
 

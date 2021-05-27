@@ -1,10 +1,12 @@
 package SkywarsGame;
 
-import SkywarsGame.Chat.ChatListener;
+import SkywarsGame.chat.ChatListener;
 import SkywarsGame.commands.Cancel;
 import SkywarsGame.commands.Start;
+import SkywarsGame.commands.TestCommand;
 import SkywarsGame.game.GameListener;
 import SkywarsGame.game.GameManager;
+import SkywarsGame.lobbyItems.LobbyItemListener;
 import SkywarsGame.spectator.SpectatorListener;
 import SkywarsGame.spectator.SpectatorManager;
 import SkywarsGame.util.WorldProtectionListener;
@@ -14,7 +16,7 @@ import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
-    //TODO: TabCompleter
+    //TODO: [General] -Potions -ChestsAdd(EnderPearls, SnowBalls, Eggs) -Hide Spectators
 
     private static JavaPlugin javaPlugin;
 
@@ -44,9 +46,9 @@ public class Main extends JavaPlugin {
     }
 
     private void registerCommands(){
-        getCommand("skywars").setExecutor(new Start(gameManager));
-        getCommand("skywars").setExecutor(new Cancel(gameManager));
-        //getCommand("testcommand").setExecutor(new TestCommand());
+        getCommand("start").setExecutor(new Start(gameManager));
+        getCommand("cancel").setExecutor(new Cancel(gameManager));
+        getCommand("testcommand").setExecutor(new TestCommand());
     }
 
     private void registerListeners(){
@@ -54,6 +56,7 @@ public class Main extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new SpectatorListener(spectatorManager, gameManager), this);
         getServer().getPluginManager().registerEvents(new GameListener(spectatorManager, gameManager), this);
         getServer().getPluginManager().registerEvents(new WorldProtectionListener(gameManager, spectatorManager), this);
+        getServer().getPluginManager().registerEvents(new LobbyItemListener(gameManager), this);
     }
 
     public static JavaPlugin getJavaPlugin() {

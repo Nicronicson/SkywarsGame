@@ -1,4 +1,4 @@
-package SkywarsGame.tools;
+package SkywarsGame.entities;
 
 import SkywarsGame.util.MapUtilities;
 import org.bukkit.Bukkit;

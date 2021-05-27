@@ -1,4 +1,4 @@
-package SkywarsGame.tools;
+package SkywarsGame.entities;
 
 import SkywarsCore.ChestEntry;
 import org.bukkit.Bukkit;
@@ -7,11 +7,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

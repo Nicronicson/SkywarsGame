@@ -5,11 +5,14 @@ authors: [Nicronicson]
 api-version: 1.13
 commands:
   #Skywars
-  skywars:
-    description: Skywars CCT
-    usage: /skywars [Parameters]
+  start:
+    description: Start
+    usage: /start [seconds]
     permission: skywars.command.create
-
+  cancel:
+      description: Cancel
+      usage: /cancel
+      permission: skywars.command.create
   testcommand:
     description: Test
     usage: /testcommand
