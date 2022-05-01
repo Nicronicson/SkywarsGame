@@ -1,9 +1,11 @@
 package SkywarsGame.game;
 
+import SkywarsGame.Main;
 import SkywarsGame.util.Language;
 import SkywarsGame.spectator.SpectatorManager;
 import SkywarsGame.util.Sounds;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
@@ -12,7 +14,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 public class GameListener implements Listener {
 
@@ -77,7 +83,7 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onPlayerGetHurt(EntityDamageEvent e) {
-        EntityDamageByEntityEvent eBYe = e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK ? (EntityDamageByEntityEvent) e : null;
+        EntityDamageByEntityEvent eBYe = e instanceof EntityDamageByEntityEvent /* e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK*/ ? (EntityDamageByEntityEvent) e : null;
 
         //Bukkit.broadcastMessage("Hurt");
 
@@ -95,8 +101,8 @@ public class GameListener implements Listener {
                     break;
 
                 case RUNNING:
-                    //Cancel damage from teammates
-                    if ((eBYe != null && eBYe.getDamager() instanceof Player && gameManager.getPlayerTeamMap().get((Player) eBYe.getEntity()).isPlayerInTeam((Player) eBYe.getDamager())) /*|| spectatorManager.isSpectator((Player) eBYe.getDamager())))*/ ||
+                    //Cancel damage from teammates and Spectators
+                    if ((eBYe != null && eBYe.getDamager() instanceof Player && (gameManager.getPlayerTeamMap().get((Player) eBYe.getEntity()).isPlayerInTeam((Player) eBYe.getDamager()) || spectatorManager.isSpectator((Player) eBYe.getDamager()))) ||
                             (e.getCause() == EntityDamageEvent.DamageCause.PROJECTILE && ((Projectile) ((EntityDamageByEntityEvent) e).getDamager()).getShooter() instanceof Player && gameManager.getPlayerTeamMap().get((Player) e.getEntity()).isPlayerInTeam(((Player) ((Projectile) ((EntityDamageByEntityEvent) e).getDamager()).getShooter())))) {
                     e.setCancelled(true);
                     break;
@@ -149,11 +155,19 @@ public class GameListener implements Listener {
         }
     }
 
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent e) {
+        //hinder Players in AntiFallTime from moving
+        if (gameManager.isAntiFallTime() && gameManager.getPlayerTeamMap().containsKey(e.getPlayer())) {
+            e.setCancelled(true);
+        }
+    }
+
     private void removePlayer(Player player, boolean spectator) {
         if (!spectator) {
             spectatorManager.removeSpectator(player);
         }
-        gameManager.removePlayer(player);
+        gameManager.removePlayer(player, spectator);
     }
 
     private void checkDying(EntityDamageEvent e) {
@@ -174,20 +188,62 @@ public class GameListener implements Listener {
                 deathMessage = String.format(Language.DEATH_BY_PLAYER.getFormattedText(),
                         String.format(Language.PLAYER_TEAM_NAME.getText(), gameManager.getPlayerTeamMap().get(player).getColor(), gameManager.getPlayerTeamMap().get(player).getId(), player.getName()),
                         String.format(Language.PLAYER_TEAM_NAME.getText(), gameManager.getPlayerTeamMap().get(gameManager.getLastDamager().get(player)).getColor(), gameManager.getPlayerTeamMap().get(gameManager.getLastDamager().get(player)).getId(), gameManager.getLastDamager().get(player).getName()));
+
+                //Send the health of the killer
+                int health = (int) gameManager.getLastDamager().get(player).getHealth();
+                StringBuilder healthString = new StringBuilder();
+                healthString.append((ChatColor.RED + "♥").repeat(health / 2));
+                if(health % 2 != 0){
+                    healthString.append(ChatColor.YELLOW + "♥");
+                }
+                healthString.append((ChatColor.GRAY + "♥").repeat((20 - health) / 2));
+
+                player.sendMessage(String.format(Language.PLAYER_HEALTH.getText(), String.format(Language.PLAYER_TEAM_NAME.getText(), gameManager.getPlayerTeamMap().get(gameManager.getLastDamager().get(player)).getColor(), gameManager.getPlayerTeamMap().get(gameManager.getLastDamager().get(player)).getId(), gameManager.getLastDamager().get(player).getName()), healthString));
+
             } else {
                 deathMessage = String.format(Language.DEATH.getFormattedText(), String.format(Language.PLAYER_TEAM_NAME.getText(), gameManager.getPlayerTeamMap().get(player).getColor(), gameManager.getPlayerTeamMap().get(player).getId(), player.getName()));
             }
 
+            //drop the items
+            if(!player.getInventory().getItemInOffHand().getType().isAir())
+                player.getWorld().dropItemNaturally(player.getLocation(), player.getInventory().getItemInOffHand());
+
+            if(player.getInventory().getHelmet() != null)
+                player.getWorld().dropItemNaturally(player.getLocation(), player.getInventory().getHelmet());
+
+            if(player.getInventory().getChestplate() != null)
+                player.getWorld().dropItemNaturally(player.getLocation(), player.getInventory().getChestplate());
+
+            if(player.getInventory().getLeggings() != null)
+                player.getWorld().dropItemNaturally(player.getLocation(), player.getInventory().getLeggings());
+
+            if(player.getInventory().getBoots() != null)
+                player.getWorld().dropItemNaturally(player.getLocation(), player.getInventory().getBoots());
+
+            Arrays.stream(player.getInventory().getContents()).filter(Objects::nonNull).forEach(itemStack -> player.getWorld().dropItemNaturally(player.getLocation(), itemStack));
+
             gameManager.sendMessageToEveryone(deathMessage);
 
-            //Let the player respawn as a Spectator
-            spectatorManager.RespawnAsSpectator(player);
-
-            //Remove player when he dies
-            removePlayer(player, true);
+            //Let the player respawn as a Spectator & Remove player when he dies
+            saveRespawn(player, e.getCause() == EntityDamageEvent.DamageCause.VOID);
 
             //Cancel damage from original event
             e.setCancelled(true);
         }
+    }
+
+    private void saveRespawn(Player player, boolean voidDamage){
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    //Let the player respawn as a Spectator
+                    spectatorManager.RespawnAsSpectator(player, voidDamage);
+                    removePlayer(player, true);
+                } catch (Exception e){
+                    saveRespawn(player, voidDamage);
+                }
+            }
+        }.runTaskLater(Main.getJavaPlugin(), 1L);
     }
 }

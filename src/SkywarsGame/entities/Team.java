@@ -34,14 +34,35 @@ public class Team {
         return teamSelector;
     }
 
+    private static final HashMap<Integer, ChatColor> colorIdMap = new HashMap<>();
     private static final HashMap<ChatColor, Material> visualColor = new HashMap<>();
 
     static {
+        colorIdMap.put(0, ChatColor.BLUE);
         visualColor.put(ChatColor.BLUE, Material.BLUE_BED);
-        visualColor.put(ChatColor.GREEN, Material.GREEN_BED);
+
+        colorIdMap.put(4, ChatColor.AQUA);
         visualColor.put(ChatColor.AQUA, Material.LIGHT_BLUE_BED);
+
+        colorIdMap.put(5, ChatColor.DARK_GREEN);
+        visualColor.put(ChatColor.DARK_GREEN, Material.GREEN_BED);
+
+        colorIdMap.put(2, ChatColor.GREEN);
+        visualColor.put(ChatColor.GREEN, Material.LIME_BED);
+        
+        colorIdMap.put(1, ChatColor.RED);
         visualColor.put(ChatColor.RED, Material.RED_BED);
+
+        colorIdMap.put(6, ChatColor.DARK_PURPLE);
+        visualColor.put(ChatColor.DARK_PURPLE, Material.PURPLE_BED);
+
+        colorIdMap.put(7, ChatColor.LIGHT_PURPLE);
         visualColor.put(ChatColor.LIGHT_PURPLE, Material.PINK_BED);
+
+        colorIdMap.put(8, ChatColor.GOLD);
+        visualColor.put(ChatColor.GOLD, Material.ORANGE_BED);
+
+        colorIdMap.put(3, ChatColor.YELLOW);
         visualColor.put(ChatColor.YELLOW, Material.YELLOW_BED);
     }
 
@@ -56,11 +77,10 @@ public class Team {
         this.gameManager = gameManager;
         players = new HashSet<>();
         this.id = id;
-        while (id >= 6) {
-            id -= 6;
+        while (id >= colorIdMap.size()) {
+            id -= colorIdMap.size();
         }
-        id += 9;
-        color = ChatColor.values()[id];
+        color = colorIdMap.get(id);
         visual = new ItemStack(visualColor.get(color));
         kills = 0;
     }
@@ -105,9 +125,9 @@ public class Team {
         ItemStack itemStack = visual.clone();
         ItemMeta itemMeta = itemStack.getItemMeta();
         assert itemMeta != null;
-        itemMeta.setDisplayName(ChatColor.RED + "Team " + id);
+        itemMeta.setDisplayName(color + "Team " + id);
 
-        itemMeta.setLore(Collections.singletonList("(" + players.size() + "/" + gameManager.getMapGame().getTeamsize() + ")"));
+        itemMeta.setLore(Collections.singletonList(ChatColor.WHITE + "(" + players.size() + "/" + gameManager.getMapGame().getTeamsize() + ")"));
 
         itemStack.setItemMeta(itemMeta);
         return itemStack;

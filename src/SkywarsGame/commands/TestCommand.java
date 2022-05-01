@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionType;
 
 import java.util.Locale;
@@ -19,8 +20,12 @@ import java.util.Map;
 public class TestCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
+
         Player player = (Player) commandSender;
-        player.setHealth(20);
+
+
+        player.setHealth(1);
+        /*
         player.setPlayerListName(ChatColor.GRAY + player.getName() + ChatColor.RED + " ✗");
         player.setInvisible(true);
         player.setInvulnerable(true);
@@ -29,15 +34,20 @@ public class TestCommand implements CommandExecutor {
         player.setFlying(true);
         player.getInventory().clear();
         player.setFireTicks(0);
-/*
+         */
+
+        /*
         ItemStack item = new ItemStack(Material.getMaterial("SPLASH_POTION"));
         item.setAmount(3);
         ((Damageable) item.getItemMeta()).setDamage(0);
-        ((PotionMeta) item.getItemMeta()).setBasePotionData(new PotionData(PotionType.valueOf("INSTANT_HEAL")));
+        PotionMeta potionMeta = ((PotionMeta) item.getItemMeta());
+        potionMeta.setBasePotionData(new PotionData(PotionType.valueOf("INSTANT_HEAL"), false, false));
+        item.setItemMeta(potionMeta);
 
-        player.getInventory().setItem(4, item);
+        player.getInventory().setItem(7, item);
 
- */
+         */
+
         return true;
     }
 }

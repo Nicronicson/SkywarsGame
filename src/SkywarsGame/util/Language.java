@@ -8,6 +8,8 @@ public enum Language {
     GAME_START_TITLE(ChatColor.AQUA + "Skywars " + ChatColor.GRAY + "startet in: " + ChatColor.WHITE),
     GAME_START_CANCEL("Der Spielstart wurde manuell " + ChatColor.RED + "abgebrochen"),
     WARM_UP("Die Schutzzeit endet in " + ChatColor.YELLOW + "%d" + ChatColor.GRAY + " Sekunden"),
+    WARM_UP_FINAL("Die Schutzzeit ist jetzt vorbei!"),
+    ANTI_FALL(GAME_START.text),
     GENERAL_ERROR(ChatColor.DARK_RED + "Something weird happened, nobody is safe :/"),
     PLAYER_JOIN(ChatColor.GREEN + "» " + ChatColor.WHITE + "%s"),
     PLAYER_LEAVE(ChatColor.RED + "« " + ChatColor.WHITE + "%s"),
@@ -24,12 +26,13 @@ public enum Language {
     ANNOUNCE_WIN_PLAYERS("%s" + ChatColor.GRAY + "haben gewonnen."),
     ANNOUNCE_WIN_PLAYER("%s" + ChatColor.GRAY + "hat gewonnen."),
     PLAYER_TEAM_NAME(ChatColor.GRAY + "[%sT%d" + ChatColor.GRAY + "] " + ChatColor.WHITE + "%s" + ChatColor.GRAY),
+    PLAYER_HEALTH("%s: %s"),
     DEATH("%s ist gestorben."),
     DEATH_BY_PLAYER("%s wurde von %s ermordet."),
     CUSTOM("%s"),
     KIT_CHANGE("Das Kit wurde erfolgreich gewechselt."),
     TEAM_CHANGE("Das Team wurde erfolgreich gewechselt."),
-    TEAM_VOLL("Das Team ist voll.");
+    TEAM_FULL("Das Team ist voll.");
 
     private static final String SYSTEM_PREFIX = ChatColor.AQUA + "Skywars " + ChatColor.DARK_GRAY + "» ";
 

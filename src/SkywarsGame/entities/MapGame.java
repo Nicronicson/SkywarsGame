@@ -1,6 +1,7 @@
 package SkywarsGame.entities;
 
 import SkywarsCore.Map;
+import SkywarsGame.Main;
 import SkywarsGame.util.MapUtilities;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -32,7 +33,7 @@ public class MapGame extends Map {
     }
 
     public void load() {
-        String pathname = "./plugins/SkyWarsAdmin/Map";
+        String pathname = Main.PATH + "/Map";
         String filename = mapname + "-map" + ".yml";
         try {
             InputStream inputStream = new FileInputStream(new File(pathname + "/" + filename));

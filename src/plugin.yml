@@ -13,6 +13,10 @@ commands:
       description: Cancel
       usage: /cancel
       permission: skywars.command.create
+  forcemap:
+    description: Force Map
+    usage: /forcemap [mapname]
+    permission: skywars.command.create
   testcommand:
     description: Test
     usage: /testcommand

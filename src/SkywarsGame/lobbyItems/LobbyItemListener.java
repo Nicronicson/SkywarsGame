@@ -1,12 +1,14 @@
 package SkywarsGame.lobbyItems;
 
 import SkywarsGame.entities.KitGame;
+import SkywarsGame.entities.Maps;
 import SkywarsGame.entities.Team;
 import SkywarsGame.game.GameManager;
 import SkywarsGame.game.GameState;
 import SkywarsGame.util.Language;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,9 +16,9 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 
 public class LobbyItemListener implements Listener {
     GameManager gameManager;
@@ -27,7 +29,7 @@ public class LobbyItemListener implements Listener {
 
     @EventHandler
     public void onUseLobbyItem(PlayerInteractEvent e) {
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK || e.getAction() == Action.RIGHT_CLICK_AIR) {
+        if (gameManager.getGameState() == GameState.LOBBY && (e.getAction() == Action.RIGHT_CLICK_BLOCK || e.getAction() == Action.RIGHT_CLICK_AIR)) {
             //Kit:
             if (e.getItem() != null && e.getItem().getItemMeta() != null && e.getItem().getItemMeta().getDisplayName().equals(ChatColor.YELLOW + KitGame.KITSELECTOR_NAME)) {
                 openKitInventory(e.getPlayer());
@@ -37,6 +39,10 @@ public class LobbyItemListener implements Listener {
                     e.getItem().getItemMeta().getDisplayName().length() >= (ChatColor.YELLOW + Team.TEAMSELECTOR_NAME).length() &&
                     e.getItem().getItemMeta().getDisplayName().startsWith(ChatColor.YELLOW + Team.TEAMSELECTOR_NAME)) {
                 openTeamInventory(e.getPlayer());
+            }
+            //Map:
+            if (e.getItem() != null && e.getItem().getItemMeta() != null && e.getItem().getItemMeta().getDisplayName().equals(ChatColor.YELLOW + Maps.MAPSELECTOR_NAME)) {
+                openMapInventory(e.getPlayer());
             }
         }
     }
@@ -62,7 +68,43 @@ public class LobbyItemListener implements Listener {
 
         Inventory inv = Bukkit.createInventory(null, invSize, ChatColor.YELLOW + Team.TEAMSELECTOR_NAME);
 
-        Arrays.stream(gameManager.getTeams()).forEach(team -> inv.addItem(team.getItem()));
+        Arrays.stream(gameManager.getTeams()).forEachOrdered(team -> inv.addItem(team.getItem()));
+
+        player.openInventory(inv);
+    }
+
+    private void openMapInventory(Player player){
+        int invSize = 9;
+
+        Inventory inv = Bukkit.createInventory(null, invSize, ChatColor.YELLOW + Maps.MAPSELECTOR_NAME);
+
+        List<ItemStack> maps = new ArrayList<>();
+        gameManager.getMaps().getMaps().forEach(mapname -> maps.add(gameManager.getMaps().getItem(mapname)));
+        Collections.shuffle(maps);
+
+        inv.setItem(0, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+        inv.setItem(1, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+
+        inv.setItem(2, maps.get(0));
+
+        inv.setItem(3, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+
+        if(maps.size() > 1){
+            inv.setItem(4, maps.get(1));
+        } else {
+            inv.setItem(4, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+        }
+
+        inv.setItem(5, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+
+        if(maps.size() > 2){
+            inv.setItem(6, maps.get(2));
+        } else {
+            inv.setItem(6, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+        }
+
+        inv.setItem(7, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
+        inv.setItem(8, new ItemStack(Material.GRAY_STAINED_GLASS_PANE));
 
         player.openInventory(inv);
     }
@@ -87,15 +129,13 @@ public class LobbyItemListener implements Listener {
                 int teamId = Integer.parseInt(Objects.requireNonNull(e.getCurrentItem().getItemMeta()).getDisplayName().substring((ChatColor.YELLOW + "Team ").length()));
 
                 if(gameManager.setTeamOfPlayer(player, teamId)){
-                    //Set List-Name
-                    player.setPlayerListName(String.format(Language.PLAYER_TEAM_NAME.getText(), gameManager.getTeams()[teamId].getColor(), gameManager.getTeams()[teamId].getId(), player.getName()));
 
                     //Set coloured KitSelector
                     player.getInventory().setItem(1, Team.getTeamSelector(gameManager.getTeams()[teamId].getColor(), teamId));
 
                     player.sendMessage(Language.TEAM_CHANGE.getFormattedText());
                 }
-                else player.sendMessage(Language.TEAM_VOLL.getFormattedText());
+                else player.sendMessage(Language.TEAM_FULL.getFormattedText());
 
                 player.closeInventory();
 

@@ -20,9 +20,10 @@ public class Countdown {
     private static BukkitTask levelCountdown;
     private static BukkitTask xpBarCountdown;
     private static BukkitTask chatCountdown;
+    private static BukkitTask titleCountdown;
 
 
-    public static void createLevelCountdown(int seconds, Language title){
+    public static void createLevelCountdown(int seconds){
         cancelLevelCountdown();
 
         AtomicInteger level = new AtomicInteger(seconds);
@@ -38,9 +39,10 @@ public class Countdown {
 
                     player.setLevel(level.get());
 
+                    /* See title Countdown
                     if (level.get() <= 3) {
                         player.sendTitle(title.getText(), ChatColor.GREEN + "" + player.getLevel(), 0, 20, 0);
-                    }
+                    }*/
                 });
                 level.getAndDecrement();
             }
@@ -92,6 +94,52 @@ public class Countdown {
         }.runTaskTimer(Main.getJavaPlugin(), 0, 20);
     }
 
+    public static void createChatCountdown(int seconds, Language text, Language finalText) {
+
+        cancelChatCountdown();
+
+        AtomicInteger remaining = new AtomicInteger(seconds);
+        chatCountdown = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (remaining.get() <= 0){
+                    Bukkit.broadcastMessage(finalText.getFormattedText());
+                    Bukkit.getOnlinePlayers().forEach(Sounds.CLICK_TIMER_END::playSoundForPlayer);
+                    if (!this.isCancelled()) this.cancel();
+                    return;
+                }
+                if (EXACT_CHAT_CALLS.contains(remaining.get())) {
+                    Bukkit.broadcastMessage(String.format(text.getFormattedText(), remaining.get()));
+                    Bukkit.getOnlinePlayers().forEach(Sounds.CLICK_TIMER::playSoundForPlayer);
+                }
+                remaining.getAndDecrement();
+            }
+        }.runTaskTimer(Main.getJavaPlugin(), 0, 20);
+    }
+
+    public static void createTitleCountdown(int seconds, Language title){
+        cancelTitleCountdown();
+
+        AtomicInteger remaining = new AtomicInteger(seconds);
+
+        levelCountdown = new BukkitRunnable() {
+            @Override
+            public void run() {
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    if (remaining.get() <= 0) {
+                        if (!this.isCancelled()) this.cancel();
+                        return;
+                    }
+
+                    if (remaining.get() <= 3) {
+                        player.sendTitle(title.getText(), ChatColor.GREEN + "" + player.getLevel(), 0, 20, 0);
+                    }
+                });
+                remaining.getAndDecrement();
+            }
+        }.runTaskTimer(Main.getJavaPlugin(), 0, 20);
+    }
+
     public static void cancelLevelCountdown(){
         if(levelCountdown==null)return;
         if(!levelCountdown.isCancelled()) levelCountdown.cancel();
@@ -107,6 +155,11 @@ public class Countdown {
     public static void cancelChatCountdown(){
         if(chatCountdown==null)return;
         if(!chatCountdown.isCancelled()) chatCountdown.cancel();
+    }
+
+    public static void cancelTitleCountdown(){
+        if(titleCountdown==null)return;
+        if(!titleCountdown.isCancelled()) titleCountdown.cancel();
     }
 
 }

@@ -4,7 +4,7 @@ import SkywarsGame.Main;
 import SkywarsGame.util.Countdown;
 import SkywarsGame.util.Language;
 import SkywarsGame.entities.KitGame;
-import SkywarsGame.entities.Lobby;
+import SkywarsGame.entities.Maps;
 import SkywarsGame.entities.MapGame;
 import SkywarsGame.entities.Team;
 import SkywarsGame.util.Sounds;
@@ -18,7 +18,9 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.util.Vector;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.*;
@@ -26,6 +28,8 @@ import java.util.*;
 public class GameManager {
     private final int LOBBY_WAIT_TIME = 30;
     private final int WARM_UP_TIME = 50;
+    private final int ANTI_FALL_TIME = 4;
+
     private final int MIN_PLAYERS = 4;
     private final int ABSOLUTE_MIN_PLAYERS = 2;
 
@@ -33,45 +37,56 @@ public class GameManager {
 
     private MapGame mapGame;
 
-    boolean warmupCountdownActive;
-
     boolean forcestart;
+    boolean forcemap;
+
+    boolean antiFallTime;
 
     private BukkitTask currentScheduledTask;
 
     private final Map<Player, Team> playerTeamMap;
     private final Map<Player, KitGame> playerKitMap;
-    private final HashMap<Player, Player> lastDamager;
+    private final Map<Player, Player> lastDamager;
+
     private GameState gameState;
+
     private final Team[] teams;
     private final Set<KitGame> kits;
+    Maps maps;
 
     public GameManager() {
+        antiFallTime = false;
         forcestart = false;
-        warmupCountdownActive = false;
+        forcemap = false;
         playerTeamMap = new HashMap<>();
         playerKitMap = new HashMap<>();
         gameState = GameState.PREPARING;
-        loadMap(new Lobby().getStandartMap());
-        lastDamager = new HashMap<>();
 
+        maps = new Maps();
+        //Select Random Map
+        List<String> mapList = maps.getMaps();
+        Collections.shuffle(mapList);
+        loadMap(mapList.get(0));
+        lastDamager = new HashMap<>();
         kits = new HashSet<>();
         loadKits();
-
         teams = new Team[mapGame.getSpawnpoints().size()];
         for (int i = 0; i < mapGame.getSpawnpoints().size(); i++) {
             teams[i] = new Team(i, this);
         }
-
         gameState = GameState.LOBBY;
     }
 
     //load:
 
     private void loadKits() {
-        String pathname = "./plugins/SkyWarsAdmin/Kit";
+        Main.getJavaPlugin().getLogger().info("Load Kits:");
+        String pathname = Main.PATH + "/Kit";
         for (File file : Objects.requireNonNull(new File(pathname).listFiles())) {
+            Main.getJavaPlugin().getLogger().info("Load Kit:");
+            Main.getJavaPlugin().getLogger().info("Kit: " + file.getAbsolutePath());
             kits.add(new KitGame(file.getAbsolutePath()));
+            Main.getJavaPlugin().getLogger().info("Count of Kits as of KITS: " + kits.toArray().length);
         }
     }
 
@@ -88,6 +103,8 @@ public class GameManager {
             world.setDifficulty(Difficulty.NORMAL);
             world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
             world.setGameRule(GameRule.DO_TRADER_SPAWNING, false);
+            world.setGameRule(GameRule.DO_TILE_DROPS, true);
+            world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
 
             mapGame = new MapGame(mapName);
 
@@ -97,10 +114,10 @@ public class GameManager {
         return false;
     }
 
-    //TODO: implement Command
     public void loadCustomMap(String mapName, Player player) {
         if (gameState == GameState.LOBBY) {
             if (loadMap(mapName)) {
+                forcemap = true;
                 player.sendMessage(Language.MAP_CHANGED.getFormattedText());
             } else {
                 player.sendMessage(Language.ERR_MAP_NOT_FOUND.getFormattedText());
@@ -123,13 +140,18 @@ public class GameManager {
     }
 
     public void teleportToLobby(Player player) {
-        //Teleport to LobbySpawn
-        Location lobbySpawn = Objects.requireNonNull(Bukkit.getWorld(LOBBY_NAME)).getSpawnLocation();
-        lobbySpawn.setWorld(Bukkit.getWorld(LOBBY_NAME));
+        try {
+            //Teleport to LobbySpawn
+            Location lobbySpawn = Objects.requireNonNull(Bukkit.getWorld(LOBBY_NAME)).getSpawnLocation();
+            lobbySpawn.setWorld(Bukkit.getWorld(LOBBY_NAME));
 
-        player.teleport(lobbySpawn);
+            player.teleport(lobbySpawn);
 
-        setPlayerInLobbyMode(player);
+            setPlayerInLobbyMode(player);
+
+        } catch (Exception e){
+            Bukkit.broadcastMessage(e.getMessage());
+        }
     }
 
     //join game
@@ -164,6 +186,8 @@ public class GameManager {
         player.getInventory().setItem(0, KitGame.getKitSelector());
 
         player.getInventory().setItem(1, Team.getTeamSelector());
+
+        player.getInventory().setItem(4, Maps.getMapSelector());
     }
 
     //Teams:
@@ -194,6 +218,9 @@ public class GameManager {
             if (playerTeamMap.get(player) != null)
                 playerTeamMap.get(player).removePlayer(player);
 
+            //Set List-Name
+            player.setPlayerListName(String.format(Language.PLAYER_TEAM_NAME.getText(), teams[teamID].getColor(), teamID, player.getName()));
+
             teams[teamID].addPlayer(player);
             playerTeamMap.replace(player, teams[teamID]);
             return true;
@@ -205,7 +232,7 @@ public class GameManager {
 
     public void giveEveryPlayerAKit() {
         playerKitMap.forEach((player, kit) -> {
-            String standardKit = ChatColor.RED + "Standart";
+            String standardKit = ChatColor.RED + "Standard";
 
             if (kit == null) {
                 assert kits.isEmpty();
@@ -255,7 +282,8 @@ public class GameManager {
 
         gameState = GameState.WARM_UP;
 
-        initiateStartCountdown();
+        //initiate starting the game
+        startAntiFallTime();
     }
 
     private void distributeKitItems() {
@@ -308,6 +336,12 @@ public class GameManager {
         }
     }
 
+    //Starts AntiFallTime
+    private void startAntiFallTime(){
+        antiFallTime = true;
+        initiateAntiFallCountdown();
+    }
+
     //Starts Action Phase
     private void startAction() {
         gameState = GameState.RUNNING;
@@ -337,7 +371,7 @@ public class GameManager {
                     Bukkit.broadcastMessage(String.format(Language.PLAYERS_NEEDED.getFormattedText(), neededPlayers));
                 }
             }
-        }.runTaskLater(Main.getJavaPlugin(), 2L);
+        }.runTaskLater(Main.getJavaPlugin(), 1L);
     }
 
     //Countdowns:
@@ -355,13 +389,39 @@ public class GameManager {
         currentScheduledTask = new BukkitRunnable() {
             @Override
             public void run() {
-                startWarmUp();
+                //TODO: load choosen Map
+                if(!forcemap){
+                    
+                }
+                currentScheduledTask = new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        startWarmUp();
+                    }
+                }.runTaskLater(Main.getJavaPlugin(), 3 * 20L);
+            }
+        }.runTaskLater(Main.getJavaPlugin(), (seconds - 3) * 20L);
+
+        Countdown.createLevelCountdown(seconds);
+        Countdown.createXpBarCountdown(seconds);
+        Countdown.createChatCountdown(seconds, Language.GAME_START);
+        Countdown.createTitleCountdown(seconds, Language.GAME_START_TITLE);
+    }
+
+    public void initiateAntiFallCountdown(){ //is apparent in the WarnUp Time
+        int seconds = ANTI_FALL_TIME;
+
+        if (currentScheduledTask != null && !currentScheduledTask.isCancelled()) currentScheduledTask.cancel();
+
+        currentScheduledTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                antiFallTime = false;
+                initiateStartCountdown();
             }
         }.runTaskLater(Main.getJavaPlugin(), seconds * 20L);
 
-        Countdown.createLevelCountdown(seconds, Language.GAME_START_TITLE);
-        Countdown.createXpBarCountdown(seconds);
-        Countdown.createChatCountdown(seconds, Language.GAME_START);
+        Countdown.createTitleCountdown(seconds, Language.ANTI_FALL);
     }
 
     private void initiateStartCountdown() {
@@ -376,7 +436,7 @@ public class GameManager {
             }
         }.runTaskLater(Main.getJavaPlugin(), seconds * 20L);
 
-        Countdown.createChatCountdown(seconds, Language.WARM_UP);
+        Countdown.createChatCountdown(seconds, Language.WARM_UP, Language.WARM_UP_FINAL);
     }
 
     public void stopWarmupCountdown() {
@@ -390,18 +450,22 @@ public class GameManager {
         Countdown.cancelLevelCountdown();
         Countdown.cancelXpBarCountdown();
         Countdown.cancelChatCountdown();
+        Countdown.cancelTitleCountdown();
     }
 
     //Winning Related Methods:
 
-    public void removePlayer(Player player) {
+    public void removePlayer(Player player, boolean spectator) {
+        if(!spectator && playerTeamMap.get(player) != null) playerTeamMap.get(player).removePlayer(player);
+
         playerTeamMap.remove(player);
         playerKitMap.remove(player);
+
+        setPlayerCount();
 
         switch (gameState) {
             case WARM_UP:
             case RUNNING:
-                setPlayerCount();
                 checkForWin();
                 break;
             case LOBBY:
@@ -429,10 +493,23 @@ public class GameManager {
     }
 
     private void announceWin(Team team) {
+        Countdown.cancelChatCountdown();
+        Countdown.cancelXpBarCountdown();
+        Countdown.cancelLevelCountdown();
+        Countdown.cancelTitleCountdown();
+
+        if(currentScheduledTask != null && !currentScheduledTask.isCancelled()){
+            currentScheduledTask.cancel();
+        }
+
         gameState = GameState.PREPARING;
 
-        //Teleports everybody back in the Lobby and Sets everyone in LobbyMode
+        //Show All Players:
+        Bukkit.getOnlinePlayers().forEach(playerToShow -> Bukkit.getOnlinePlayers().forEach(player -> player.showPlayer(Main.getJavaPlugin(), playerToShow)));
+
+        //Teleports everybody back in the Lobby and Sets everyone in LobbyMode and set Velocity to 0
         Bukkit.getOnlinePlayers().forEach(player -> {
+            player.setVelocity(new Vector());
             player.getInventory().clear();
             teleportToLobby(player);
         });
@@ -491,6 +568,8 @@ public class GameManager {
                 player.setFlying(false);
                 player.setInvulnerable(true);
                 player.setCollidable(true);
+                player.setHealth(20);
+                player.setFoodLevel(20);
             }
         }.runTaskLater(Main.getJavaPlugin(), 2L);
     }
@@ -586,6 +665,10 @@ public class GameManager {
 
     //Getter:
 
+    public Maps getMaps() {
+        return maps;
+    }
+
     public Team[] getTeams() {
         return teams;
     }
@@ -594,7 +677,7 @@ public class GameManager {
         return kits;
     }
 
-    public HashMap<Player, Player> getLastDamager() {
+    public Map<Player, Player> getLastDamager() {
         return lastDamager;
     }
 
@@ -616,6 +699,10 @@ public class GameManager {
 
     public boolean isForcestart() {
         return forcestart;
+    }
+
+    public boolean isAntiFallTime() {
+        return antiFallTime;
     }
 
     //Setter:
