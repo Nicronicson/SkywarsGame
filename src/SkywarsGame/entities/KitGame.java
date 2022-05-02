@@ -182,8 +182,6 @@ public class KitGame extends Kit {
     }
 
     public ItemStack getItem() {
-        Main.getJavaPlugin().getLogger().info("GET-ITEM Exeption: Help");
-        Main.getJavaPlugin().getLogger().info("GET-ITEM Exeption: " + visual.getType().name());
         ItemStack itemStack = visual.clone();
         ItemMeta itemMeta = itemStack.getItemMeta();
         assert itemMeta != null;
@@ -197,16 +195,16 @@ public class KitGame extends Kit {
     public List<String> getItemDescription(){
         List<String> kitDescription = new ArrayList<>();
 
-        if (helmet != null) kitDescription.add(ChatColor.YELLOW + "" + helmet.getAmount() + "x " + ChatColor.WHITE + helmet.getType().name() + ChatColor.GRAY + " " + getEnchantmentString(helmet));
-        if (chestplate != null) kitDescription.add(ChatColor.YELLOW + "" + chestplate.getAmount() + "x " + ChatColor.WHITE + chestplate.getType().name() + ChatColor.GRAY + " " + getEnchantmentString(chestplate));
-        if (leggings != null) kitDescription.add(ChatColor.YELLOW + "" + leggings.getAmount() + "x " + ChatColor.WHITE + leggings.getType().name() + ChatColor.GRAY + " " + getEnchantmentString(leggings));
-        if (boots != null) kitDescription.add(ChatColor.YELLOW + "" + boots.getAmount() + "x " + ChatColor.WHITE + boots.getType().name() + ChatColor.GRAY + " " + getEnchantmentString(boots));
+        if (helmet != null) kitDescription.add(ChatColor.YELLOW + "" + helmet.getAmount() + "x " + ChatColor.WHITE + helmet.getType().name().replace('_',' ') + ChatColor.GRAY + " " + getEnchantmentString(helmet));
+        if (chestplate != null) kitDescription.add(ChatColor.YELLOW + "" + chestplate.getAmount() + "x " + ChatColor.WHITE + chestplate.getType().name().replace('_',' ') + ChatColor.GRAY + " " + getEnchantmentString(chestplate));
+        if (leggings != null) kitDescription.add(ChatColor.YELLOW + "" + leggings.getAmount() + "x " + ChatColor.WHITE + leggings.getType().name().replace('_',' ') + ChatColor.GRAY + " " + getEnchantmentString(leggings));
+        if (boots != null) kitDescription.add(ChatColor.YELLOW + "" + boots.getAmount() + "x " + ChatColor.WHITE + boots.getType().name().replace('_',' ') + ChatColor.GRAY + " " + getEnchantmentString(boots));
 
-        if (leftHand != null) kitDescription.add(ChatColor.YELLOW + "" + leftHand.getAmount() + "x " + ChatColor.WHITE + leftHand.getType().name() + ChatColor.GRAY + " " + getEnchantmentString(leftHand));
+        if (leftHand != null) kitDescription.add(ChatColor.YELLOW + "" + leftHand.getAmount() + "x " + ChatColor.WHITE + leftHand.getType().name().replace('_',' ') + ChatColor.GRAY + " " + getEnchantmentString(leftHand));
 
         Arrays.stream(inventory)
                 .filter(Objects::nonNull)
-                .forEach(item -> kitDescription.add(ChatColor.YELLOW + "" + item.getAmount() + "x " + ChatColor.WHITE + item.getType().name() + ChatColor.GRAY + " " + getEnchantmentString(item)));
+                .forEach(item -> kitDescription.add(ChatColor.YELLOW + "" + item.getAmount() + "x " + ChatColor.WHITE + item.getType().name().replace('_',' ') + ChatColor.GRAY + " " + getEnchantmentString(item)));
 
         return kitDescription;
     }
