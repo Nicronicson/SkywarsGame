@@ -27,7 +27,7 @@ public class MapGame extends Map {
         load();
     }
 
-    public void start(java.util.Map<Player, Team> playerTeamMap) {
+    public void startAndTeleport(java.util.Map<Player, Team> playerTeamMap) {
         fillChests();
         teleportAllTeams(playerTeamMap);
     }

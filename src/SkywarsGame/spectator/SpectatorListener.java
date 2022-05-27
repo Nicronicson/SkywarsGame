@@ -26,17 +26,6 @@ public class SpectatorListener implements Listener {
         this.gameManager = gameManager;
     }
 
-    //Only things, which aren't present in GameManager:
-
-    /*
-    @EventHandler
-    public void onSpectatorDamage(EntityDamageByEntityEvent e){
-        if(e.getDamager() instanceof Player && spectatorManager.isSpectator((Player)e.getDamager())) e.setCancelled(true);
-
-        if(e.getEntity() instanceof Player && spectatorManager.isSpectator((Player)e.getEntity())) e.setCancelled(true);
-    }
-     */
-
     @EventHandler
     public void onSpectatorArrowPickup(PlayerPickupArrowEvent e){
         if(spectatorManager.isSpectator(e.getPlayer())) e.setCancelled(true);

@@ -34,13 +34,6 @@ public class Main extends JavaPlugin {
         getLogger().info("Loading Skywars Plugin.");
         javaPlugin = this;
 
-        //Set GAMERULES of Lobby
-        /*World world = Bukkit.getWorld("Lobby");
-        assert world != null;
-        world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        world.setTime(1000L);
-        world.setClearWeatherDuration(Integer.MAX_VALUE);*/
-
         gameManager = new GameManager();
         spectatorManager = new SpectatorManager(gameManager);
 
@@ -54,8 +47,6 @@ public class Main extends JavaPlugin {
     }
 
     private void registerCommands(){
-        //Objects.requireNonNull(getCommand("start")).setExecutor(new Start(gameManager));
-        //Objects.requireNonNull(getCommand("cancel")).setExecutor(new Cancel(gameManager));
         Objects.requireNonNull(getCommand("forcemap")).setExecutor(new ForceMap(gameManager));
         //Objects.requireNonNull(getCommand("testcommand")).setExecutor(new TestCommand());
     }

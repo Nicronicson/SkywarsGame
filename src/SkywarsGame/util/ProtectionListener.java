@@ -116,8 +116,7 @@ public class ProtectionListener implements Listener {
     }
 
     private void protectSpectator(Event e){
-        if(/*gameManager.getGameState() == GameState.LOBBY || gameManager.getGameState() == GameState.FINISHED || gameManager.getGameState() == GameState.PREPARING ||*/
-                (e instanceof EntityEvent && ((EntityEvent) e).getEntity() instanceof Player && spectatorManager.isSpectator((Player) ((EntityEvent) e).getEntity())) ||
+        if((e instanceof EntityEvent && ((EntityEvent) e).getEntity() instanceof Player && spectatorManager.isSpectator((Player) ((EntityEvent) e).getEntity())) ||
                 (e instanceof PlayerEvent && spectatorManager.isSpectator(((PlayerEvent) e).getPlayer())) ||
                 (e instanceof BlockPlaceEvent && spectatorManager.isSpectator(((BlockPlaceEvent) e).getPlayer())) ||
                 (e instanceof BlockBreakEvent && spectatorManager.isSpectator(((BlockBreakEvent) e).getPlayer())) ||

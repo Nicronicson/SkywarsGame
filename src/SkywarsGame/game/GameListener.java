@@ -5,10 +5,7 @@ import SkywarsGame.util.Language;
 import SkywarsGame.spectator.SpectatorManager;
 import SkywarsGame.util.Sounds;
 import net.problemzone.lobbibi.modules.events.GameStartEvent;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -33,7 +30,7 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onGameStartEvent(GameStartEvent e){
-        gameManager.startWarmUp();
+        gameManager.startGame();
     }
 
     @EventHandler
@@ -52,7 +49,7 @@ public class GameListener implements Listener {
                 break;
 
             case LOBBY:
-                gameManager.joinGame(e.getPlayer());
+                gameManager.joinAsPlayer(e.getPlayer());
 
             /*case FINISHED:
                 gameManager.joinLobby(e);

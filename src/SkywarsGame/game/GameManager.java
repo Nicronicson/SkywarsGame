@@ -20,25 +20,13 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.util.Vector;
-import org.spigotmc.event.player.PlayerSpawnLocationEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.*;
 
 public class GameManager {
-    //private final int LOBBY_WAIT_TIME = 30;
-    private final int WARM_UP_TIME = 50;
-    private final int ANTI_FALL_TIME = 4;
-
-    //private final int MIN_PLAYERS = 4;
-    //private final int ABSOLUTE_MIN_PLAYERS = 2;
-
-    //private final String LOBBY_NAME = "Lobby";
-
     private MapGame mapGame;
 
-    //boolean forcestart;
     boolean forcemap;
 
     boolean antiFallTime;
@@ -57,11 +45,9 @@ public class GameManager {
 
     public GameManager() {
         antiFallTime = false;
-        //forcestart = false;
         forcemap = false;
         playerTeamMap = new HashMap<>();
         playerKitMap = new HashMap<>();
-        //gameState = GameState.PREPARING;
 
         maps = new Maps();
         //Select Random Map
@@ -126,55 +112,13 @@ public class GameManager {
         }
     }
 
-    //join/teleport to lobby
-
-    /*public void joinLobby(PlayerSpawnLocationEvent e) {
-        Player player = e.getPlayer();
-
-
-        //Teleport to LobbySpawn
-        Location lobbySpawn = Objects.requireNonNull(Bukkit.getWorld(LOBBY_NAME)).getSpawnLocation();
-        lobbySpawn.setWorld(Bukkit.getWorld(LOBBY_NAME));
-
-        e.setSpawnLocation(lobbySpawn);
-
-
-        setPlayerInLobbyMode(player);
-    }*/
-
-    /*public void teleportToLobby(Player player) {
-        try {
-            //Teleport to LobbySpawn
-            Location lobbySpawn = Objects.requireNonNull(Bukkit.getWorld(LOBBY_NAME)).getSpawnLocation();
-            lobbySpawn.setWorld(Bukkit.getWorld(LOBBY_NAME));
-
-            player.teleport(lobbySpawn);
-
-            setPlayerInLobbyMode(player);
-
-        } catch (Exception e){
-            Bukkit.broadcastMessage(e.getMessage());
-        }
-    }*/
-
     //join game
 
-    public void joinGame(Player player) {
+    public void joinAsPlayer(Player player) {
         //Stuff which is needed before a game starts
         playerTeamMap.put(player, null);
         playerKitMap.put(player, null);
 
-        /*
-        //Check if there are enough players to start
-        if (enoughPlayers()) {
-            if (currentScheduledTask == null || currentScheduledTask.isCancelled()) {
-                forcestart = false;
-                initiateWarmupCountdown();
-            }
-        } else {
-            broadcastNeededPlayers();
-        }
-        */
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -187,6 +131,7 @@ public class GameManager {
             }
         }.runTaskLater(Main.getJavaPlugin(), 2L);
 
+        //Lobby stuff
         player.getInventory().setItem(0, KitGame.getKitSelector());
 
         player.getInventory().setItem(1, Team.getTeamSelector());
@@ -250,13 +195,8 @@ public class GameManager {
         setKitDisplay(player);
     }
 
-    //Starts Warm Up Phase
-    public void startWarmUp() {
-        /*
-        //Disable Lobby Plugin:
-        if (Bukkit.getPluginManager().getPlugin("Lobbibi") != null)
-            Bukkit.getPluginManager().disablePlugin(Objects.requireNonNull(Bukkit.getPluginManager().getPlugin("Lobbibi")));
-         */
+    //Starts Game (Warm Up Phase)
+    public void startGame() {
         //TODO: load choosen Map
         if(!forcemap){
 
@@ -268,25 +208,11 @@ public class GameManager {
 
         //For every Player
         playerTeamMap.forEach((player, team) -> {
-            //Set InitialScoreboards
-            //setInitialScoreboard(player);
-
-            //Clear all Inventories
             player.getInventory().clear();
-
-            //Set everyone's color
-            //player.setPlayerListName(String.format(Language.PLAYER_TEAM_NAME.getText(), team.getColor(), team.getId(), player.getName()));
-
             setPlayerInGameMode(player);
-
-            /*
-            //Set XP for the case that the countdown fails
-            player.setLevel(0);
-            player.setExp(0);
-            */
         });
 
-        mapGame.start(playerTeamMap);
+        mapGame.startAndTeleport(playerTeamMap);
 
         distributeKitItems();
 
@@ -357,66 +283,8 @@ public class GameManager {
         gameState = GameState.RUNNING;
     }
 
-    //Player needed for starting:
-
-    /*public boolean enoughPlayers() {
-        if (isForcestart())
-            return playerTeamMap.size() >= ABSOLUTE_MIN_PLAYERS;
-        else
-            return playerTeamMap.size() >= MIN_PLAYERS;
-    }*/
-
-    /*private int neededPlayers() {
-        return MIN_PLAYERS - Bukkit.getOnlinePlayers().size();
-    }*/
-
-    /*public void broadcastNeededPlayers() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                int neededPlayers = neededPlayers();
-                if (neededPlayers == 1) {
-                    Bukkit.broadcastMessage(Language.PLAYERS_NEEDED_ONE.getFormattedText());
-                } else if (neededPlayers > 1) {
-                    Bukkit.broadcastMessage(String.format(Language.PLAYERS_NEEDED.getFormattedText(), neededPlayers));
-                }
-            }
-        }.runTaskLater(Main.getJavaPlugin(), 1L);
-    }*/
-
-    //Countdowns:
-
-    /*private void initiateWarmupCountdown() {
-        initiateWarmupCountdown(LOBBY_WAIT_TIME);
-    }*/
-
-    /*public void initiateWarmupCountdown(int seconds) {
-        if (gameState != GameState.LOBBY)
-            return;
-
-        if (currentScheduledTask != null && !currentScheduledTask.isCancelled()) currentScheduledTask.cancel();
-
-        currentScheduledTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-
-                currentScheduledTask = new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        startWarmUp();
-                    }
-                }.runTaskLater(Main.getJavaPlugin(), 3 * 20L);
-            }
-        }.runTaskLater(Main.getJavaPlugin(), (seconds - 3) * 20L);
-
-        Countdown.createLevelCountdown(seconds);
-        Countdown.createXpBarCountdown(seconds);
-        Countdown.createChatCountdown(seconds, Language.GAME_START);
-        Countdown.createTitleCountdown(seconds, Language.GAME_START_TITLE);
-    }
-    */
-
     public void initiateAntiFallCountdown(){ //is apparent in the WarnUp Time
+        int ANTI_FALL_TIME = 4;
         int seconds = ANTI_FALL_TIME;
 
         if (currentScheduledTask != null && !currentScheduledTask.isCancelled()) currentScheduledTask.cancel();
@@ -433,6 +301,8 @@ public class GameManager {
     }
 
     private void initiateStartCountdown() {
+        //private final int LOBBY_WAIT_TIME = 30;
+        int WARM_UP_TIME = 50;
         int seconds = WARM_UP_TIME;
 
         if (currentScheduledTask != null && !currentScheduledTask.isCancelled()) currentScheduledTask.cancel();
@@ -447,20 +317,6 @@ public class GameManager {
         Countdown.createChatCountdown(seconds, Language.WARM_UP, Language.WARM_UP_FINAL);
     }
 
-    /*public void stopWarmupCountdown() {
-        if (gameState != GameState.LOBBY)
-            return;
-
-        //Cancel Scheduler
-        if (currentScheduledTask != null && !currentScheduledTask.isCancelled()) currentScheduledTask.cancel();
-
-        //Cancel Countdown
-        Countdown.cancelLevelCountdown();
-        Countdown.cancelXpBarCountdown();
-        Countdown.cancelChatCountdown();
-        Countdown.cancelTitleCountdown();
-    }*/
-
     //Winning Related Methods:
 
     public void removePlayer(Player player, boolean spectator) {
@@ -471,16 +327,8 @@ public class GameManager {
 
         setPlayerCount();
 
-        switch (gameState) {
-            case WARM_UP:
-            case RUNNING:
-                checkForWin();
-                /*break;
-            case LOBBY:
-                if (!enoughPlayers()) {
-                    broadcastNeededPlayers();
-                    stopWarmupCountdown();
-                }*/
+        if (gameState == GameState.WARM_UP || gameState == GameState.RUNNING) {
+            checkForWin();
         }
     }
 
@@ -509,8 +357,6 @@ public class GameManager {
         if(currentScheduledTask != null && !currentScheduledTask.isCancelled()){
             currentScheduledTask.cancel();
         }
-
-        //gameState = GameState.PREPARING;
 
         //Show All Players:
         Bukkit.getOnlinePlayers().forEach(playerToShow -> Bukkit.getOnlinePlayers().forEach(player -> player.showPlayer(Main.getJavaPlugin(), playerToShow)));
@@ -550,33 +396,20 @@ public class GameManager {
                     if (team.getPlayers().contains(player)) {
                         //Win sound
                         Sounds.WIN.playSoundForPlayer(player);
-                        //player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.AMBIENT, 1, 1.1F);
                     } else {
                         //Lose sound
                         Sounds.LOSE.playSoundForPlayer(player);
-                        //player.playSound(player.getLocation(), Sound.ENCHANT_THORNS_HIT, SoundCategory.AMBIENT, 1, 0.5F);
                     }
 
                 });
                 gameState = GameState.LOBBY;
             }
         }.runTaskLater(Main.getJavaPlugin(), 2L);
-
-        /*
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                //Bukkit.getOnlinePlayers().forEach(player -> Bukkit.getServer().dispatchCommand(player, "hub"));
-                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "stop");
-            }
-        }.runTaskLater(Main.getJavaPlugin(), 10 * 20L);
-         */
     }
 
     //Player Modes:
 
     public void setPlayerInLobbyMode(Player player) {
-        //player.setGameMode(GameMode.SURVIVAL);
         player.setInvisible(false);
 
         //Everything which needs to be set after spawning
@@ -700,10 +533,6 @@ public class GameManager {
         return lastDamager;
     }
 
-    /*public int getABSOLUTE_MIN_PLAYERS() {
-        return ABSOLUTE_MIN_PLAYERS;
-    }*/
-
     public Map<Player, Team> getPlayerTeamMap() {
         return playerTeamMap;
     }
@@ -716,17 +545,7 @@ public class GameManager {
         return gameState;
     }
 
-    /*public boolean isForcestart() {
-        return forcestart;
-    }*/
-
     public boolean isAntiFallTime() {
         return antiFallTime;
     }
-
-    //Setter:
-
-    /*public void setForcestart(boolean forcestart) {
-        this.forcestart = forcestart;
-    }*/
 }
