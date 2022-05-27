@@ -39,10 +39,10 @@ public class Countdown {
 
                     player.setLevel(level.get());
 
-                    /* See title Countdown
-                    if (level.get() <= 3) {
-                        player.sendTitle(title.getText(), ChatColor.GREEN + "" + player.getLevel(), 0, 20, 0);
-                    }*/
+                    // See title Countdown
+                    //if (level.get() <= 3) {
+                    //    player.sendTitle(title.getText(), ChatColor.GREEN + "" + player.getLevel(), 0, 20, 0);
+                    //}
                 });
                 level.getAndDecrement();
             }
@@ -132,7 +132,7 @@ public class Countdown {
                     }
 
                     if (remaining.get() <= 3) {
-                        player.sendTitle(title.getText(), ChatColor.GREEN + "" + player.getLevel(), 0, 20, 0);
+                        player.sendTitle(title.getText(), ChatColor.GREEN + "" + remaining.get(), 0, 20, 0);
                     }
                 });
                 remaining.getAndDecrement();

@@ -3,24 +3,25 @@ version: 0.1
 name: Skywars
 authors: [Nicronicson]
 api-version: 1.13
+depend: [Gringotts]
 commands:
   #Skywars
-  start:
-    description: Start
-    usage: /start [seconds]
-    permission: skywars.command.create
-  cancel:
-      description: Cancel
-      usage: /cancel
-      permission: skywars.command.create
+  #start:
+  #  description: Start
+  #  usage: /start [seconds]
+  #  permission: skywars.command.create
+  #cancel:
+  #    description: Cancel
+  #    usage: /cancel
+  #    permission: skywars.command.create
   forcemap:
     description: Force Map
     usage: /forcemap [mapname]
     permission: skywars.command.create
-  testcommand:
-    description: Test
-    usage: /testcommand
-    permission: skywars.command.create
+  #testcommand:
+  #  description: Test
+  #  usage: /testcommand
+  #  permission: skywars.command.create
 permissions:
   skywars.command.create:
     default: op

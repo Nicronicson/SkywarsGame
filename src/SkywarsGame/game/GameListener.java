@@ -4,6 +4,7 @@ import SkywarsGame.Main;
 import SkywarsGame.util.Language;
 import SkywarsGame.spectator.SpectatorManager;
 import SkywarsGame.util.Sounds;
+import net.problemzone.lobbibi.modules.events.GameStartEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
@@ -31,6 +32,11 @@ public class GameListener implements Listener {
     }
 
     @EventHandler
+    public void onGameStartEvent(GameStartEvent e){
+        gameManager.startWarmUp();
+    }
+
+    @EventHandler
     public void onPlayerSpawnLocation(PlayerSpawnLocationEvent e) {
         //Determine PlayerProperties
         switch (gameManager.getGameState()) {
@@ -48,10 +54,10 @@ public class GameListener implements Listener {
             case LOBBY:
                 gameManager.joinGame(e.getPlayer());
 
-            case FINISHED:
+            /*case FINISHED:
                 gameManager.joinLobby(e);
                 break;
-
+            */
             default:
                 e.getPlayer().kickPlayer(Language.ERR_TRY_TO_REJOIN.getFormattedText());
                 break;
@@ -61,7 +67,7 @@ public class GameListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         //Custom join message
-        if (gameManager.getGameState() == GameState.LOBBY || gameManager.getGameState() == GameState.FINISHED) {
+        if (gameManager.getGameState() == GameState.LOBBY/* || gameManager.getGameState() == GameState.FINISHED*/) {
             e.setJoinMessage(String.format(Language.PLAYER_JOIN.getText(), e.getPlayer().getName()));
         } else {
             e.setJoinMessage("");
@@ -104,53 +110,54 @@ public class GameListener implements Listener {
                     //Cancel damage from teammates and Spectators
                     if ((eBYe != null && eBYe.getDamager() instanceof Player && (gameManager.getPlayerTeamMap().get((Player) eBYe.getEntity()).isPlayerInTeam((Player) eBYe.getDamager()) || spectatorManager.isSpectator((Player) eBYe.getDamager()))) ||
                             (e.getCause() == EntityDamageEvent.DamageCause.PROJECTILE && ((Projectile) ((EntityDamageByEntityEvent) e).getDamager()).getShooter() instanceof Player && gameManager.getPlayerTeamMap().get((Player) e.getEntity()).isPlayerInTeam(((Player) ((Projectile) ((EntityDamageByEntityEvent) e).getDamager()).getShooter())))) {
-                    e.setCancelled(true);
+                        e.setCancelled(true);
+                        break;
+                    }
+
+                    //Save last damager
+                    Player player = (Player) e.getEntity();
+                    Player damager = null;
+
+                    if (eBYe != null && eBYe.getDamager() instanceof Player) {
+                        damager = (Player) eBYe.getDamager();
+                    }
+
+                    if (e.getCause() == EntityDamageEvent.DamageCause.PROJECTILE) {
+                        EntityDamageByEntityEvent eBYp = (EntityDamageByEntityEvent) e;
+                        if (((Projectile) eBYp.getDamager()).getShooter() instanceof Player) {
+                            damager = (Player) ((Projectile) eBYp.getDamager()).getShooter();
+                        }
+                    }
+
+                    if (damager != null) {
+                        if (gameManager.getLastDamager().containsKey(player)) {
+                            gameManager.getLastDamager().replace(player, damager);
+                        } else {
+                            gameManager.getLastDamager().put(player, damager);
+                        }
+                    }
+
+                    //Bukkit.broadcastMessage("Check Dying");
+
+                    //Checking if Player would die
+                    checkDying(e);
+
                     break;
-                }
 
-                //Save last damager
-                Player player = (Player) e.getEntity();
-                Player damager = null;
-
-                if (eBYe != null && eBYe.getDamager() instanceof Player) {
-                    damager = (Player) eBYe.getDamager();
-                }
-
-                if (e.getCause() == EntityDamageEvent.DamageCause.PROJECTILE) {
-                    EntityDamageByEntityEvent eBYp = (EntityDamageByEntityEvent) e;
-                    if (((Projectile) eBYp.getDamager()).getShooter() instanceof Player) {
-                        damager = (Player) ((Projectile) eBYp.getDamager()).getShooter();
-                    }
-                }
-
-                if (damager != null) {
-                    if (gameManager.getLastDamager().containsKey(player)) {
-                        gameManager.getLastDamager().replace(player, damager);
-                    } else {
-                        gameManager.getLastDamager().put(player, damager);
-                    }
-                }
-
-                //Bukkit.broadcastMessage("Check Dying");
-
-                //Checking if Player would die
-                checkDying(e);
-
-                break;
-
-                case PREPARING:
+                /*case PREPARING:
                     //Cancel everything which happens in this phase
                     e.setCancelled(true);
                     break;
 
                 case LOBBY:
                     //Teleport player to spawn when falling in Lobby
-                case FINISHED:
+                /*case FINISHED:
                     if (e.getCause() == EntityDamageEvent.DamageCause.VOID) {
                         e.setCancelled(true);
                         gameManager.teleportToLobby((Player) e.getEntity());
                     }
                     break;
+                 */
             }
         }
     }

@@ -1,4 +1,4 @@
-package SkywarsGame.commands;
+/*package SkywarsGame.commands;
 
 import SkywarsGame.game.GameManager;
 import SkywarsGame.util.Language;
@@ -27,3 +27,4 @@ public class Cancel implements CommandExecutor {
     }
 
 }
+*/

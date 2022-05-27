@@ -119,7 +119,7 @@ public class LobbyItemListener implements Listener {
                 player.closeInventory();
                 player.sendMessage(Language.KIT_CHANGE.getFormattedText());
 
-                //TODO: Kit bestätigen & Speichern --> Nachricht beim Auswählen senden
+                //TODO: Kit Speichern
                 if(kit.getDescription() != null) player.sendMessage(String.format(Language.CUSTOM.getFormattedText(), kit.getDescription()));
             }
 

@@ -8,6 +8,7 @@ import SkywarsGame.entities.Maps;
 import SkywarsGame.entities.MapGame;
 import SkywarsGame.entities.Team;
 import SkywarsGame.util.Sounds;
+import net.problemzone.lobbibi.modules.events.GameFinishEvent;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -26,18 +27,18 @@ import java.io.File;
 import java.util.*;
 
 public class GameManager {
-    private final int LOBBY_WAIT_TIME = 30;
+    //private final int LOBBY_WAIT_TIME = 30;
     private final int WARM_UP_TIME = 50;
     private final int ANTI_FALL_TIME = 4;
 
-    private final int MIN_PLAYERS = 4;
-    private final int ABSOLUTE_MIN_PLAYERS = 2;
+    //private final int MIN_PLAYERS = 4;
+    //private final int ABSOLUTE_MIN_PLAYERS = 2;
 
-    private final String LOBBY_NAME = "Lobby";
+    //private final String LOBBY_NAME = "Lobby";
 
     private MapGame mapGame;
 
-    boolean forcestart;
+    //boolean forcestart;
     boolean forcemap;
 
     boolean antiFallTime;
@@ -56,16 +57,17 @@ public class GameManager {
 
     public GameManager() {
         antiFallTime = false;
-        forcestart = false;
+        //forcestart = false;
         forcemap = false;
         playerTeamMap = new HashMap<>();
         playerKitMap = new HashMap<>();
-        gameState = GameState.PREPARING;
+        //gameState = GameState.PREPARING;
 
         maps = new Maps();
         //Select Random Map
         List<String> mapList = maps.getMaps();
         Collections.shuffle(mapList);
+        Main.getJavaPlugin().getLogger().info("Loading " + mapList.get(0));
         loadMap(mapList.get(0));
         lastDamager = new HashMap<>();
         kits = new HashSet<>();
@@ -83,10 +85,8 @@ public class GameManager {
         Main.getJavaPlugin().getLogger().info("Load Kits:");
         String pathname = Main.PATH + "/Kit";
         for (File file : Objects.requireNonNull(new File(pathname).listFiles())) {
-            Main.getJavaPlugin().getLogger().info("Load Kit:");
             Main.getJavaPlugin().getLogger().info("Kit: " + file.getAbsolutePath());
             kits.add(new KitGame(file.getAbsolutePath()));
-            Main.getJavaPlugin().getLogger().info("Count of Kits as of KITS: " + kits.toArray().length);
         }
     }
 
@@ -110,12 +110,13 @@ public class GameManager {
 
             return true;
         }
-        Main.getJavaPlugin().getLogger().info("Map wasn't found");
+        Main.getJavaPlugin().getLogger().warning("Map wasn't found");
         return false;
     }
 
     public void loadCustomMap(String mapName, Player player) {
         if (gameState == GameState.LOBBY) {
+            Main.getJavaPlugin().getLogger().info("Loading " + mapName);
             if (loadMap(mapName)) {
                 forcemap = true;
                 player.sendMessage(Language.MAP_CHANGED.getFormattedText());
@@ -127,8 +128,9 @@ public class GameManager {
 
     //join/teleport to lobby
 
-    public void joinLobby(PlayerSpawnLocationEvent e) {
+    /*public void joinLobby(PlayerSpawnLocationEvent e) {
         Player player = e.getPlayer();
+
 
         //Teleport to LobbySpawn
         Location lobbySpawn = Objects.requireNonNull(Bukkit.getWorld(LOBBY_NAME)).getSpawnLocation();
@@ -136,10 +138,11 @@ public class GameManager {
 
         e.setSpawnLocation(lobbySpawn);
 
-        setPlayerInLobbyMode(player);
-    }
 
-    public void teleportToLobby(Player player) {
+        setPlayerInLobbyMode(player);
+    }*/
+
+    /*public void teleportToLobby(Player player) {
         try {
             //Teleport to LobbySpawn
             Location lobbySpawn = Objects.requireNonNull(Bukkit.getWorld(LOBBY_NAME)).getSpawnLocation();
@@ -152,7 +155,7 @@ public class GameManager {
         } catch (Exception e){
             Bukkit.broadcastMessage(e.getMessage());
         }
-    }
+    }*/
 
     //join game
 
@@ -161,6 +164,7 @@ public class GameManager {
         playerTeamMap.put(player, null);
         playerKitMap.put(player, null);
 
+        /*
         //Check if there are enough players to start
         if (enoughPlayers()) {
             if (currentScheduledTask == null || currentScheduledTask.isCancelled()) {
@@ -170,7 +174,7 @@ public class GameManager {
         } else {
             broadcastNeededPlayers();
         }
-
+        */
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -248,11 +252,15 @@ public class GameManager {
 
     //Starts Warm Up Phase
     public void startWarmUp() {
-        gameState = GameState.PREPARING;
-
+        /*
         //Disable Lobby Plugin:
         if (Bukkit.getPluginManager().getPlugin("Lobbibi") != null)
             Bukkit.getPluginManager().disablePlugin(Objects.requireNonNull(Bukkit.getPluginManager().getPlugin("Lobbibi")));
+         */
+        //TODO: load choosen Map
+        if(!forcemap){
+
+        }
 
         distributePlayersOnTeams();
 
@@ -271,9 +279,11 @@ public class GameManager {
 
             setPlayerInGameMode(player);
 
+            /*
             //Set XP for the case that the countdown fails
             player.setLevel(0);
             player.setExp(0);
+            */
         });
 
         mapGame.start(playerTeamMap);
@@ -349,18 +359,18 @@ public class GameManager {
 
     //Player needed for starting:
 
-    public boolean enoughPlayers() {
+    /*public boolean enoughPlayers() {
         if (isForcestart())
             return playerTeamMap.size() >= ABSOLUTE_MIN_PLAYERS;
         else
             return playerTeamMap.size() >= MIN_PLAYERS;
-    }
+    }*/
 
-    private int neededPlayers() {
+    /*private int neededPlayers() {
         return MIN_PLAYERS - Bukkit.getOnlinePlayers().size();
-    }
+    }*/
 
-    public void broadcastNeededPlayers() {
+    /*public void broadcastNeededPlayers() {
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -372,15 +382,15 @@ public class GameManager {
                 }
             }
         }.runTaskLater(Main.getJavaPlugin(), 1L);
-    }
+    }*/
 
     //Countdowns:
 
-    private void initiateWarmupCountdown() {
+    /*private void initiateWarmupCountdown() {
         initiateWarmupCountdown(LOBBY_WAIT_TIME);
-    }
+    }*/
 
-    public void initiateWarmupCountdown(int seconds) {
+    /*public void initiateWarmupCountdown(int seconds) {
         if (gameState != GameState.LOBBY)
             return;
 
@@ -389,10 +399,7 @@ public class GameManager {
         currentScheduledTask = new BukkitRunnable() {
             @Override
             public void run() {
-                //TODO: load choosen Map
-                if(!forcemap){
-                    
-                }
+
                 currentScheduledTask = new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -407,6 +414,7 @@ public class GameManager {
         Countdown.createChatCountdown(seconds, Language.GAME_START);
         Countdown.createTitleCountdown(seconds, Language.GAME_START_TITLE);
     }
+    */
 
     public void initiateAntiFallCountdown(){ //is apparent in the WarnUp Time
         int seconds = ANTI_FALL_TIME;
@@ -439,7 +447,7 @@ public class GameManager {
         Countdown.createChatCountdown(seconds, Language.WARM_UP, Language.WARM_UP_FINAL);
     }
 
-    public void stopWarmupCountdown() {
+    /*public void stopWarmupCountdown() {
         if (gameState != GameState.LOBBY)
             return;
 
@@ -451,7 +459,7 @@ public class GameManager {
         Countdown.cancelXpBarCountdown();
         Countdown.cancelChatCountdown();
         Countdown.cancelTitleCountdown();
-    }
+    }*/
 
     //Winning Related Methods:
 
@@ -467,12 +475,12 @@ public class GameManager {
             case WARM_UP:
             case RUNNING:
                 checkForWin();
-                break;
+                /*break;
             case LOBBY:
                 if (!enoughPlayers()) {
                     broadcastNeededPlayers();
                     stopWarmupCountdown();
-                }
+                }*/
         }
     }
 
@@ -502,62 +510,73 @@ public class GameManager {
             currentScheduledTask.cancel();
         }
 
-        gameState = GameState.PREPARING;
+        //gameState = GameState.PREPARING;
 
         //Show All Players:
         Bukkit.getOnlinePlayers().forEach(playerToShow -> Bukkit.getOnlinePlayers().forEach(player -> player.showPlayer(Main.getJavaPlugin(), playerToShow)));
 
-        //Teleports everybody back in the Lobby and Sets everyone in LobbyMode and set Velocity to 0
+        //Sets everyone in LobbyMode and set Velocity to 0
         Bukkit.getOnlinePlayers().forEach(player -> {
             player.setVelocity(new Vector());
             player.getInventory().clear();
-            teleportToLobby(player);
+            player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+            setPlayerInLobbyMode(player);
         });
 
-        Bukkit.broadcastMessage(Language.GAME_FINISHED.getText());
-
-        StringBuilder playerNames = new StringBuilder();
-        team.getPlayers().forEach(player -> {
-            playerNames.append(String.format(Language.PLAYER_TEAM_NAME.getText(), playerTeamMap.get(player).getColor(), playerTeamMap.get(player).getId(), player.getName()));
-            playerNames.append(", ");
-        });
-        playerNames.delete(playerNames.lastIndexOf(","), playerNames.lastIndexOf(",") + 1);
-
-        if (team.getPlayers().size() == 1) {
-            Bukkit.broadcastMessage(String.format(Language.ANNOUNCE_WIN_PLAYER.getFormattedText(), playerNames));
-        } else {
-            Bukkit.broadcastMessage(String.format(Language.ANNOUNCE_WIN_PLAYERS.getFormattedText(), playerNames));
-        }
-
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            player.sendTitle(String.format(Language.ANNOUNCE_WIN_TEAM.getTitleText(), team.getColor(), team.getId()), "", 10, 60, 10);
-
-            if (team.getPlayers().contains(player)) {
-                //Win sound
-                Sounds.WIN.playSoundForPlayer(player);
-                //player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.AMBIENT, 1, 1.1F);
-            } else {
-                //Lose sound
-                Sounds.LOSE.playSoundForPlayer(player);
-                //player.playSound(player.getLocation(), Sound.ENCHANT_THORNS_HIT, SoundCategory.AMBIENT, 1, 0.5F);
-            }
-
-        });
-        gameState = GameState.FINISHED;
+        // Call Lobbibi
+        Bukkit.getPluginManager().callEvent(new GameFinishEvent());
 
         new BukkitRunnable() {
             @Override
             public void run() {
-                //Bukkit.getOnlinePlayers().forEach(player -> Bukkit.getServer().dispatchCommand(player, "hub")); //TODO: doesn't work that way
+                Bukkit.broadcastMessage(Language.GAME_FINISHED.getText());
+
+                StringBuilder playerNames = new StringBuilder();
+                team.getPlayers().forEach(player -> {
+                    playerNames.append(String.format(Language.PLAYER_TEAM_NAME.getText(), playerTeamMap.get(player).getColor(), playerTeamMap.get(player).getId(), player.getName()));
+                    playerNames.append(", ");
+                });
+                playerNames.delete(playerNames.lastIndexOf(","), playerNames.lastIndexOf(",") + 1);
+
+                if (team.getPlayers().size() == 1) {
+                    Bukkit.broadcastMessage(String.format(Language.ANNOUNCE_WIN_PLAYER.getFormattedText(), playerNames));
+                } else {
+                    Bukkit.broadcastMessage(String.format(Language.ANNOUNCE_WIN_PLAYERS.getFormattedText(), playerNames));
+                }
+
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    player.sendTitle(String.format(Language.ANNOUNCE_WIN_TEAM.getTitleText(), team.getColor(), team.getId()), "", 10, 60, 10);
+
+                    if (team.getPlayers().contains(player)) {
+                        //Win sound
+                        Sounds.WIN.playSoundForPlayer(player);
+                        //player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.AMBIENT, 1, 1.1F);
+                    } else {
+                        //Lose sound
+                        Sounds.LOSE.playSoundForPlayer(player);
+                        //player.playSound(player.getLocation(), Sound.ENCHANT_THORNS_HIT, SoundCategory.AMBIENT, 1, 0.5F);
+                    }
+
+                });
+                gameState = GameState.LOBBY;
+            }
+        }.runTaskLater(Main.getJavaPlugin(), 2L);
+
+        /*
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                //Bukkit.getOnlinePlayers().forEach(player -> Bukkit.getServer().dispatchCommand(player, "hub"));
                 Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "stop");
             }
         }.runTaskLater(Main.getJavaPlugin(), 10 * 20L);
+         */
     }
 
     //Player Modes:
 
     public void setPlayerInLobbyMode(Player player) {
-        player.setGameMode(GameMode.SURVIVAL);
+        //player.setGameMode(GameMode.SURVIVAL);
         player.setInvisible(false);
 
         //Everything which needs to be set after spawning
@@ -681,9 +700,9 @@ public class GameManager {
         return lastDamager;
     }
 
-    public int getABSOLUTE_MIN_PLAYERS() {
+    /*public int getABSOLUTE_MIN_PLAYERS() {
         return ABSOLUTE_MIN_PLAYERS;
-    }
+    }*/
 
     public Map<Player, Team> getPlayerTeamMap() {
         return playerTeamMap;
@@ -697,9 +716,9 @@ public class GameManager {
         return gameState;
     }
 
-    public boolean isForcestart() {
+    /*public boolean isForcestart() {
         return forcestart;
-    }
+    }*/
 
     public boolean isAntiFallTime() {
         return antiFallTime;
@@ -707,7 +726,7 @@ public class GameManager {
 
     //Setter:
 
-    public void setForcestart(boolean forcestart) {
+    /*public void setForcestart(boolean forcestart) {
         this.forcestart = forcestart;
-    }
+    }*/
 }

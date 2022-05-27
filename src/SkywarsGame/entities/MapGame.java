@@ -101,7 +101,7 @@ public class MapGame extends Map {
             try {
                 teleportPlayer(player, team.getId());
             } catch (Exception e) {
-                Bukkit.broadcastMessage("Teleporting failed");
+                Main.getJavaPlugin().getLogger().severe("Teleporting failed");
             }
         }));
     }

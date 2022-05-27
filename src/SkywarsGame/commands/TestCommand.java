@@ -1,4 +1,4 @@
-package SkywarsGame.commands;
+/*package SkywarsGame.commands;
 
 import net.minecraft.server.v1_16_R3.Potions;
 import org.bukkit.ChatColor;
@@ -25,7 +25,7 @@ public class TestCommand implements CommandExecutor {
 
 
         player.setHealth(1);
-        /*
+
         player.setPlayerListName(ChatColor.GRAY + player.getName() + ChatColor.RED + " ✗");
         player.setInvisible(true);
         player.setInvulnerable(true);
@@ -34,9 +34,8 @@ public class TestCommand implements CommandExecutor {
         player.setFlying(true);
         player.getInventory().clear();
         player.setFireTicks(0);
-         */
 
-        /*
+
         ItemStack item = new ItemStack(Material.getMaterial("SPLASH_POTION"));
         item.setAmount(3);
         ((Damageable) item.getItemMeta()).setDamage(0);
@@ -46,8 +45,8 @@ public class TestCommand implements CommandExecutor {
 
         player.getInventory().setItem(7, item);
 
-         */
 
         return true;
     }
 }
+*/

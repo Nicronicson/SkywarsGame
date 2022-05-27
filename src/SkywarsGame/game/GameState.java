@@ -2,10 +2,10 @@ package SkywarsGame.game;
 
 public enum GameState {
 
-    PREPARING,
+    //PREPARING,
     LOBBY,
     WARM_UP,
-    RUNNING,
-    FINISHED
+    RUNNING//,
+    //FINISHED
 
 }

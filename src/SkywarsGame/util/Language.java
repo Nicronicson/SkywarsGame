@@ -9,7 +9,7 @@ public enum Language {
     GAME_START_CANCEL("Der Spielstart wurde manuell " + ChatColor.RED + "abgebrochen"),
     WARM_UP("Die Schutzzeit endet in " + ChatColor.YELLOW + "%d" + ChatColor.GRAY + " Sekunden"),
     WARM_UP_FINAL("Die Schutzzeit ist jetzt vorbei!"),
-    ANTI_FALL("Das Spiel startet in: "),
+    ANTI_FALL("Das Spiel startet in:"),
     GENERAL_ERROR(ChatColor.DARK_RED + "Something weird happened, nobody is safe :/"),
     PLAYER_JOIN(ChatColor.GREEN + "» " + ChatColor.WHITE + "%s"),
     PLAYER_LEAVE(ChatColor.RED + "« " + ChatColor.WHITE + "%s"),

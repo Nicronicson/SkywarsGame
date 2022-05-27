@@ -34,16 +34,16 @@ public class ChestGame {
     final int legendaryItemChance = 0;
 
     //ItemChanceMiddle (have to add up to 100):
-    final int commonItemChanceMiddle = 5;
-    final int uncommonItemChanceMiddle = 10;
+    final int commonItemChanceMiddle = 20;
+    final int uncommonItemChanceMiddle = 30;
     final int epicItemChanceMiddle = 30;
-    final int legendaryItemChanceMiddle = 55;
+    final int legendaryItemChanceMiddle = 20;
 
     final Map<Rarity , List<ChestEntry>> chestEntryLists;
 
     public ChestGame(){
         if(commonItemChance + uncommonItemChance + epicItemChance + legendaryItemChance != 100 || commonItemChanceMiddle + uncommonItemChanceMiddle + epicItemChanceMiddle + legendaryItemChanceMiddle != 100){
-            Main.getJavaPlugin().getLogger().info("You are stupid");
+            Main.getJavaPlugin().getLogger().warning("You are stupid");
         }
 
         chestEntryLists = new HashMap<>();
